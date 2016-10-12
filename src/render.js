@@ -34,6 +34,17 @@ function createNode(data) {
         node.appendChild(document.createTextNode(decodeEntities(data.value)));
     return node;
 }
+function handleListeners(domNode, listeners) {
+    for (var event in listeners) {
+            for (var i = 0; i < listeners[event].length; i++) {
+                var listener = listeners[event][i];
+                if (!listener._isAttached) {
+                    listener._isAttached = true;
+                    domNode.addEventListener(event, listener);
+                }
+        }
+    }
+}
 
 
 module.exports = {
@@ -57,12 +68,16 @@ module.exports = {
                     var newNode = createNode(op.n),
                         parent = op.p.length > 0 ? root.querySelector(op.p) : root;
                     parent.appendChild(newNode);
+                    if (op.hl)
+                        handleListeners(newNode, op.l);
                     break;
                 case "replace":
                     var newNode = createNode(op.n),
                         node = root.querySelector(op.p),
                         parent = node.parentNode ? node.parentNode : root;
                     parent.replaceChild(newNode, node);
+                    if (op.hl)
+                        handleListeners(newNode, op.l);
                     break;
                 case "attrChanged":
                     root.querySelector(op.n).setAttribute(op.a, op.v);

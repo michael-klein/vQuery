@@ -5,6 +5,7 @@ var isReady = false,
     render = require('./render.js'),
     virtualQuery = require('./virtualQuery.js'),
     selectorEngine = require('./selectorEngine.js'),
+    isHTML = require('is-html'),
     oldDOM,
     newDOM;
 
@@ -50,12 +51,16 @@ vQuery = function(arg) {
                     arg();
                 });
             break;
-        case "string":              
-                prepareDOMs();
+        case "string":
+            prepareDOMs();
+            if (isHTML(arg)) {
+                return new virtualQuery(vDOM.createVDOM(arg).children);
+            } else {
                 var nodes = selectorEngine.query(newDOM,arg);
                 if (nodes.length > 0) {
                     return new virtualQuery(nodes);
                 } else return nodes;
+            }             
     }
 }
 //dev helper

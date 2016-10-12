@@ -28,16 +28,14 @@ Object.assign(virtualQuery.prototype, {
     appendTo: function (arg) {
         switch (typeof arg) {
             case "string":
-                vDOM.addChildFromVNodes([vDOM.createVDOM(arg)], this, "end");
-                return this;
+                return new virtualQuery(vDOM.addChildFromVNodes([vDOM.createVDOM(arg)], this, "end"));
             case "object":
                 if (arg instanceof vDOM.virtualNode) {
-                    vDOM.addChildFromVNodes([arg], this, "end");
+                    return new virtualQuery(vDOM.addChildFromVNodes([arg], this, "end"));
                 }
                 if (arg instanceof virtualQuery) {
-                    vDOM.addChildFromVNodes(arg, this, "end");
+                    return new virtualQuery(vDOM.addChildFromVNodes(arg, this, "end"));
                 }
-                return this;
         }
     },
     prepend: function (arg) {
@@ -59,16 +57,14 @@ Object.assign(virtualQuery.prototype, {
     prependTo: function (arg) {
         switch (typeof arg) {
             case "string":
-                vDOM.addChildFromVNodes([vDOM.createVDOM(arg)], this, "start");
-                return this;
+                return new virtualQuery(vDOM.addChildFromVNodes([vDOM.createVDOM(arg)], this, "start"));
             case "object":
                 if (arg instanceof vDOM.virtualNode) {
-                    vDOM.addChildFromVNodes([arg], this, "start");
+                    return new virtualQuery(vDOM.addChildFromVNodes([arg], this, "start"));
                 }
                 if (arg instanceof virtualQuery) {
-                    vDOM.addChildFromVNodes(arg, this, "start");
+                    return new virtualQuery(vDOM.addChildFromVNodes(arg, this, "start"));
                 }
-                return this;
         }
     },
     remove: function () {
@@ -126,6 +122,9 @@ Object.assign(virtualQuery.prototype, {
     },
     clone: function() {
         return vDOM.clone(this);
+    },
+    on: function(event, callback) {
+        vDOM.on(this, event, callback);
     }
 });
 module.exports = virtualQuery;

@@ -156,7 +156,9 @@ module.exports = function (DOM1, DOM2, entry) {
                         ops.push({
                             t: "addNode",
                             p: getParentPath(newNode, newPath),
-                            n: newChild
+                            n: newChild,
+                            l: newChild.listeners,
+                            hl: newChild.hasListeners
                         });
                     }
                 } else {
@@ -212,6 +214,18 @@ module.exports = function (DOM1, DOM2, entry) {
                                     if (typeof oldChild.name === "undefined")
                                         console.log("dan")
                                     var newPath = oldChild.name === "html" ? path : addToPath(path, oldChild.name + ":nth-child(" + (newIndex + 1) + ")");
+                                    if (newChild.hasListeners) {
+                                        var domNode = document.querySelector(getPath(oldChild, newPath));
+                                        for (var event in newChild.listeners) {
+                                            for (var i=0; i<newChild.listeners[event].length; i++) {
+                                                var listener = newChild.listeners[event][i];
+                                                if (!listener._isAttached) {
+                                                    listener._isAttached = true;
+                                                    domNode.addEventListener(event, listener);
+                                                }
+                                            }
+                                        }
+                                    }
                                     helper(oldChild, newChild, newPath, newIndex, i);
                                 }
                         }
@@ -222,7 +236,9 @@ module.exports = function (DOM1, DOM2, entry) {
                 t: "replace",
                 p: getPath(newNode, path),
                 n: newNode,
-                i: index
+                i: index,
+                l: newChild.listeners,
+                hl: newChild.hasListeners
             });
         }
     }

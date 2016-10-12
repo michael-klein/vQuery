@@ -9,9 +9,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "clone": "^2.0.0",
     "css-selector-parser": "^1.1.0",
     "domready": "^1.0.8",
-    "html-parser": "^0.10.0"
+    "html-parser": "^0.10.0",
+    "is-html": "^1.0.0"
   },
   "devDependencies": {
     "highlight.js": "^9.6.0",

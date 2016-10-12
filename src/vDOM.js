@@ -18,7 +18,9 @@ function virtualNode(name, parentNode) {
             path: "",
             children: [],
             childNodes: [],
-            id: null
+            id: null,
+            listeners: {},
+            hasListeners: false
     });
 };
 function virtualTextNode(value, parentNode) {
@@ -139,19 +141,26 @@ module.exports = {
     },
     addChildFromVNodes: function(nodes, vNodes, position) {
         this.removeNodes(vNodes, true);
+        var clones = [];
         switch (typeof position) {
             case "string":
                     if (position === "start") {
                         for (var i=0; i<nodes.length; i++) {
                             var newDOM = clone(vNodes);
+                            clones = clones.concat(newDOM);
                             nodes[i].children = newDOM.concat(nodes[i].children);
                             nodes[i].childNodes = newDOM.concat(nodes[i].childNodes);
+                            for (var k=0; k<newDOM.length; k++)
+                                newDOM[k].parentNode = nodes[i];
                         }
                     } if (position === "end") {
                         for (var i=0; i<nodes.length; i++) {
                             var newDOM = clone(vNodes);
+                            clones = clones.concat(newDOM);
                             nodes[i].children = nodes[i].children.concat(newDOM);
                             nodes[i].childNodes = nodes[i].childNodes.concat(newDOM);
+                            for (var k=0; k<newDOM.length; k++)
+                                newDOM[k].parentNode = nodes[i];
                         }
                     }
                 break;
@@ -160,18 +169,23 @@ module.exports = {
                         var newDOM = this.createVDOM(html);
                         for (var j=0; j<newDOM.children.length; j++) {
                             var newDOM = clone(vNodes);
+                            clones = clones.concat(newDOM);
                             nodes[i].childNodes.splice(position, nodes[i].childNodes.indexOf(nodes[i].children[position]), newDOM);
                             nodes[i].children.splice(position, 0, newDOM);
+                            for (var k=0; k<newDOM.length; k++)
+                                newDOM[k].parentNode = nodes[i];
                         }
                     }
                 break;
         }
         setChanged(nodes[0]);
+        return clones;
     },
     //removes a virtual node from its parent
     removeNodes: function(nodes, ignoreSetChanged) {
         for (var i=0; i<nodes.length; i++) {
             var node = nodes[i];
+            if (!node.parentNode) continue;
             node.parentNode.children.splice(node.parentNode.children.indexOf(node),1);
             node.parentNode.childNodes.splice(node.parentNode.childNodes.indexOf(node),1);
         }
@@ -266,5 +280,16 @@ module.exports = {
     },
     clone: function(node) {
         return clone(node);
+    },
+    on: function(nodes, event, callback) {
+        for (var i=0; i<nodes.length; i++) {
+            var node = nodes[i];
+            if (typeof node.listeners[event] === "undefined")
+                node.listeners[event] = [callback];
+            else
+                node.listeners[event].push(callback);
+            node.hasListeners = true;
+        }
+        setChanged(nodes[0]);
     }
 }

@@ -1,0 +1,68 @@
+<pre><code class="lang-js"><span class="hljs-keyword">var</span> isReady = <span class="hljs-literal">false</span>,
+    domready = <span class="hljs-built_in">require</span>(<span class="hljs-string">'domready'</span>),
+    vDOM = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./vDOM.js'</span>),
+    diff = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./diff.js'</span>),
+    render = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./render.js'</span>),
+    api = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./api.js'</span>),
+    selectorEngine = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./selectorEngine.js'</span>),
+    oldDOM,
+    newDOM;
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">prepareDOMs</span>(<span class="hljs-params"></span>) </span>{
+    <span class="hljs-keyword">if</span> (!oldDOM) {
+        oldDOM = vDOM.createVDOM(<span class="hljs-built_in">document</span>.querySelector(<span class="hljs-string">'html'</span>).outerHTML);
+        newDOM = vDOM.createVDOM(<span class="hljs-built_in">document</span>.querySelector(<span class="hljs-string">'html'</span>).outerHTML);
+        newDOM.changed = <span class="hljs-literal">false</span>;
+        <span class="hljs-built_in">console</span>.log(oldDOM, newDOM, oldDOM === newDOM);
+    }
+}
+domready(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+        isReady = <span class="hljs-literal">true</span>;
+});
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">renderTimer</span>(<span class="hljs-params"></span>) </span>{
+    <span class="hljs-keyword">if</span> (newDOM.changed) {
+        <span class="hljs-built_in">window</span>.requestAnimationFrame(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
+            <span class="hljs-keyword">var</span> d = diff(oldDOM, newDOM, <span class="hljs-string">"html"</span>);
+            <span class="hljs-keyword">if</span> (d.length &gt; <span class="hljs-number">0</span>)
+                render.render(d, <span class="hljs-built_in">document</span>.querySelector(<span class="hljs-string">"html"</span>));
+            oldDOM = newDOM;
+            newDOM = vDOM.createVDOM(<span class="hljs-built_in">document</span>.querySelector(<span class="hljs-string">'html'</span>).outerHTML);
+            newDOM.changed = <span class="hljs-literal">false</span>;
+            <span class="hljs-built_in">window</span>.setTimeout(renderTimer, <span class="hljs-number">1</span>);
+        });
+    } <span class="hljs-keyword">else</span> 
+        <span class="hljs-built_in">window</span>.setTimeout(renderTimer,<span class="hljs-number">1</span>);
+}
+
+vQuery = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">arg</span>) </span>{
+    <span class="hljs-keyword">switch</span> (<span class="hljs-keyword">typeof</span> arg) {
+        <span class="hljs-keyword">case</span> <span class="hljs-string">"function"</span>:
+            <span class="hljs-keyword">if</span> (isReady) {
+                prepareDOMs();
+                <span class="hljs-built_in">window</span>.setTimeout(renderTimer,<span class="hljs-number">1</span>);
+                arg();
+            }
+            <span class="hljs-keyword">else</span>
+                domready(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{                    
+                    prepareDOMs();
+                    <span class="hljs-built_in">window</span>.setTimeout(renderTimer,<span class="hljs-number">1</span>);
+                    arg();
+                });
+            <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">"string"</span>:              
+                prepareDOMs();
+                <span class="hljs-keyword">var</span> nodes = selectorEngine.query(newDOM,arg);
+                <span class="hljs-keyword">if</span> (nodes.length &gt; <span class="hljs-number">0</span>) {
+                    <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> api(nodes);
+                } <span class="hljs-keyword">else</span> <span class="hljs-keyword">return</span> nodes;
+    }
+}
+</code></pre>
+<p>dev helper</p>
+<pre><code class="lang-js">vQuery.getDOM = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+    <span class="hljs-keyword">return</span> newDOM;
+}
+</code></pre>
+<hr>
+<p>Generated <em>Wed Sep 14 2016 11:26:49 GMT+0200 (CEST)</em> from <a href="index.js" title="View in source">&#x24C8; index.js</a></p>

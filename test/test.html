@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="../dist/index.js"></script>
+        <script>
+            var $ = vQuery;
+            $(function() {
+                var lastID=null;
+                for (var i=0; i<1000;i++) {
+                    if (lastID)
+                        $('#test >div h1 p div#' + lastID).remove();
+                    $('#test >div h1 p').prepend("<div id=\"n" + i + "\">hi</div>");
+                    lastID = "n" + i;
+                }
+                console.log($('#test >div h1 p').hasClass('testasdsad'))
+                $('#test >div h1 p').addClass('testasdsad').html('<div>lalalala</div>').append($('#append'));
+                
+                console.log($('#test >div h1 p').hasClass('testasdsad'))
+                $('#test >div h1 p').removeClass('testasdsad');
+                console.log($('#test >div h1 p').hasClass('testasdsad'))
+                console.log($('#attr').attr('align'))
+                console.log($('#attr').attr('align', 'right'));
+                console.log($('#attr').attr('align'))
+                console.log($('#attr').attr({
+                    align: "center"
+                }))
+                console.log($('#attr').css({
+                    marginLeft: "50px",
+                    left: "10px"
+                }))
+                console.log($('#attr').css("left"))
+                console.log($('#attr').css("asd"))
+                console.log($('#attr').clone())
+                $('#attr').prependTo($('#test')[0])
+            });
+        </script>
+    </head>
+    <body>
+        <div id="test">
+            <div>
+                <h1>
+                    <p class="hello"></p>
+                    <p>asd</p>
+                </h1>
+            </div>
+        </div>
+        <div id="append">trollol</div>
+        <div id="attr" align="left"></div>
+    </body>
+</html>

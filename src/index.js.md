@@ -1,0 +1,72 @@
+```js
+var isReady = false,
+    domready = require('domready'),
+    vDOM = require('./vDOM.js'),
+    diff = require('./diff.js'),
+    render = require('./render.js'),
+    virtualQuery = require('./virtualQuery.js'),
+    selectorEngine = require('./selectorEngine.js'),
+    oldDOM,
+    newDOM;
+
+function prepareDOMs() {
+    if (!oldDOM) {
+        oldDOM = vDOM.createVDOM(document.querySelector('html').outerHTML);
+        newDOM = vDOM.createVDOM(document.querySelector('html').outerHTML);
+        newDOM.changed = false;
+        console.log(oldDOM, newDOM, oldDOM === newDOM);
+    }
+}
+domready(function () {
+        isReady = true;
+});
+
+function renderTimer() {
+    if (newDOM.changed) {
+        window.requestAnimationFrame(function() {
+            var d = diff(oldDOM, newDOM, "html");
+            if (d.length > 0)
+                render.render(d, document.querySelector("html"));
+            oldDOM = newDOM;
+            newDOM = vDOM.createVDOM(document.querySelector('html').outerHTML);
+            newDOM.changed = false;
+            window.setTimeout(renderTimer, 1);
+        });
+    } else 
+        window.setTimeout(renderTimer,1);
+}
+
+vQuery = function(arg) {
+    switch (typeof arg) {
+        case "function":
+            if (isReady) {
+                prepareDOMs();
+                window.setTimeout(renderTimer,1);
+                arg();
+            }
+            else
+                domready(function() {                    
+                    prepareDOMs();
+                    window.setTimeout(renderTimer,1);
+                    arg();
+                });
+            break;
+        case "string":              
+                prepareDOMs();
+                var nodes = selectorEngine.query(newDOM,arg);
+                if (nodes.length > 0) {
+                    return new virtualQuery(nodes);
+                } else return nodes;
+    }
+}
+```
+dev helper
+```js
+vQuery.getDOM = function() {
+    return [oldDOM, newDOM];
+}
+
+```
+------------------------
+Generated _Thu Sep 22 2016 17:19:53 GMT+0200 (CEST)_ from [&#x24C8; index.js](index.js "View in source")
+

@@ -87,6 +87,13 @@ module.exports = {
     oldDOM: null,
     idNodes: {},
     createVDOM: function (html, init) {
+        var frag = document.createDocumentFragment(),
+            tmp = document.createElement('body'), child;
+        tmp.innerHTML = html;
+        while (child = tmp.firstElementChild) {
+            frag.appendChild(child);
+        }
+        return frag;
         var cNode = new virtualNode("root", null)
             self = this;
         htmlParser.parse(html.replace(/\r?\n|\r/g, ""), {

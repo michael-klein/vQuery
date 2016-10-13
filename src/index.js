@@ -7,30 +7,28 @@ var isReady = false,
     virtualQuery = require('./virtualQuery.js'),
     selectorEngine = require('./selectorEngine.js'),
     isHTML = require('is-html'),
-    cloneObject = require("clone"),
-    oldDOM,
-    newDOM;
+    cloneObject = require("clone");
 
 function prepareDOMs() {
-    if (!oldDOM) {
-        oldDOM = vDOM.createVDOM(document.querySelector('html').outerHTML);
-        newDOM = vDOM.createVDOM(document.querySelector('html').outerHTML);
-        newDOM.changed = false;
-        console.log(oldDOM, newDOM, oldDOM === newDOM);
+    if (!vDOM.oldDOM) {
+        vDOM.oldDOM = vDOM.createVDOM(document.querySelector('html').outerHTML, true);
+        vDOM.newDOM = vDOM.createVDOM(document.querySelector('html').outerHTML, true);
+        vDOM.newDOM.changed = false;
     }
 }
+
 domready(function () {
         isReady = true;
 });
 
 function renderTimer() {
-    if (newDOM.changed) {
+    if (vDOM.newDOM.changed) {
         window.requestAnimationFrame(function() {
-            var d = diff(oldDOM, newDOM, "html");
+            var d = diff(vDOM.oldDOM, vDOM.newDOM, "html");
             if (d.length > 0)
                 render.render(d, document.querySelector("html"));
-            oldDOM = cloneObject(newDOM);
-            newDOM.changed = false;
+            vDOM.oldDOM = cloneObject(vDOM.newDOM);
+            vDOM.newDOM.changed = false;
             window.setTimeout(renderTimer, 1);
         });
     } else 
@@ -55,9 +53,9 @@ vQuery = function(arg) {
         case "string":
             prepareDOMs();
             if (isHTML(arg)) {
-                return new virtualQuery(vDOM.createVDOM(arg).children);
+                return new virtualQuery(vDOM.createVDOM(arg, true).children);
             } else {
-                var nodes = selectorEngine.query(newDOM,arg);
+                var nodes = selectorEngine.query(vDOM.newDOM,arg);
                 if (nodes.length > 0) {
                     return new virtualQuery(nodes);
                 } else return nodes;
@@ -69,7 +67,6 @@ vQuery = function(arg) {
             }        
     }
 }
-//dev helper
 vQuery.getDOM = function() {
-    return [oldDOM, newDOM];
+    return [vDOM.oldDOM, vDOM.newDOM];
 }

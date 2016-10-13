@@ -1,6 +1,7 @@
 
 var CssSelectorParser = require('css-selector-parser').CssSelectorParser,
-    sparser = new CssSelectorParser();
+    sparser = new CssSelectorParser(),
+    vDOM = require('./vDOM.js');
 
 sparser.registerSelectorPseudos('has');
 sparser.registerNestingOperators('>', '+', '~');
@@ -44,6 +45,22 @@ function checkID(rules, node) {
 }
 
 function traverseVDOM(rules, currentVDOM, selectedNodes, exact) {
+    if (rules.id) {
+        var idNode = vDOM.idNodes[rules.id];
+        if (typeof idNode !== "undefined" && idNode.length > 0) {
+            selectedNodes.push(idNode);
+            if (!hasMoreRules(rules)) {
+                if (selectedNodes.indexOf(idNode) === -1)
+                    selectedNodes.push(idNode);
+            }
+            else
+                for (var i = 0; i < idNode.children.length; i++) {
+                    var nextRules = getNextRules(rules);
+                    traverseVDOM(nextRules, idNode.children[i], selectedNodes, nextRules.nestingOperator === ">");
+                }
+            return;
+        }
+    }
     var hits = {
         tagName: checkTagName(rules, currentVDOM),
         classNames: checkClasses(rules, currentVDOM),
@@ -65,10 +82,10 @@ function traverseVDOM(rules, currentVDOM, selectedNodes, exact) {
                 traverseVDOM(rules, currentVDOM.children[i], selectedNodes);
 }
 
-module.exports.query = function(vDOM, selector) {
+module.exports.query = function(virtualNode, selector) {
     var parsedSelector = sparser.parse(selector),
         selectedNodes = [];
     if (hasMoreRules(parsedSelector))
-        traverseVDOM(getNextRules(parsedSelector), vDOM.children[0], selectedNodes);
+        traverseVDOM(getNextRules(parsedSelector), virtualNode.children[0], selectedNodes);
     return selectedNodes;
 }

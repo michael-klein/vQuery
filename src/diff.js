@@ -249,7 +249,6 @@ module.exports = function (DOM1, DOM2, entry) {
             });
         }
     }
-    console.log(DOM1, DOM2)
     helper(DOM1, DOM2, [entry], 1);
     return ops.concat(removals);
 }

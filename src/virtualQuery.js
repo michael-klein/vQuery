@@ -19,7 +19,6 @@ Object.assign(virtualQuery.prototype, {
                     vDOM.addChildFromVNodes(this, [arg], "end");
                 }
                 if (arg instanceof virtualQuery) {
-                    console.log(arg)
                     vDOM.addChildFromVNodes(this, arg, "end");
                 }
                 return this;
@@ -48,7 +47,6 @@ Object.assign(virtualQuery.prototype, {
                     vDOM.addChildFromVNodes(this, [arg], "start");
                 }
                 if (arg instanceof virtualQuery) {
-                    console.log(arg)
                     vDOM.addChildFromVNodes(this, arg, "start");
                 }
                 return this;

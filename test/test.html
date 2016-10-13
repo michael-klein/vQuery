@@ -10,16 +10,23 @@
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <script src="../dist/index.js"></script>
+        <script   src="http://code.jquery.com/jquery-3.1.1.min.js"   integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="   crossorigin="anonymous"></script>
         <script>
             var $ = vQuery;
             $(function() {
-                var lastID=null;
+                var lastID=null; 
+                var t = new Date().getTime();
                 for (var i=0; i<1000;i++) {
+                    //var $p = $('#test >div h1 p');
+                    console.log(document.querySelector('#test >div h1 p'))
+                    /*
                     if (lastID)
                         $('#test >div h1 p div#' + lastID).remove();
-                    $('#test >div h1 p').prepend("<div id=\"n" + i + "\">hi</div>");
+                    $p.prepend("<div id=\"n" + i + "\">hi</div>");
                     lastID = "n" + i;
-                }
+                    */
+                }                    
+                console.log("iTime: ", new Date().getTime() - t)
                 var listener = function(e) {
                     console.log("click")
                     $(this).off("click", listener);

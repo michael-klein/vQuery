@@ -1,3 +1,4 @@
+
 var vDOM = require('./vDOM.js');
 if (!Array.prototype.filter) {
     Array.prototype.filter = function (fun/*, thisArg*/) {
@@ -183,7 +184,9 @@ module.exports = function (DOM1, DOM2, entry) {
                                 removals.unshift({
                                     t: "remove",
                                     p: getPath(oldChild, newPath),
-                                    i: newIndex
+                                    i: newIndex,
+                                    l: oldChild.listeners,
+                                    hl: oldChild.hasListeners
                                 });
                             }
                         } else {
@@ -217,11 +220,15 @@ module.exports = function (DOM1, DOM2, entry) {
                                     if (newChild.hasListeners) {
                                         var domNode = document.querySelector(getPath(oldChild, newPath));
                                         for (var event in newChild.listeners) {
-                                            for (var i=0; i<newChild.listeners[event].length; i++) {
-                                                var listener = newChild.listeners[event][i];
+                                            for (var k=0; k<newChild.listeners[event].length; k++) {
+                                                var listener = newChild.listeners[event][k];
                                                 if (!listener._isAttached) {
                                                     listener._isAttached = true;
                                                     domNode.addEventListener(event, listener);
+                                                } else if (listener._detach) {
+                                                    domNode.removeEventListener(event, listener);
+                                                    newChild.listeners[event].splice(k,1);
+                                                    k--;
                                                 }
                                             }
                                         }
@@ -237,8 +244,8 @@ module.exports = function (DOM1, DOM2, entry) {
                 p: getPath(newNode, path),
                 n: newNode,
                 i: index,
-                l: newChild.listeners,
-                hl: newChild.hasListeners
+                l: newNode.listeners,
+                hl: newNode.hasListeners
             });
         }
     }

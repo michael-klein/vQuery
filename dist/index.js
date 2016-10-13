@@ -3607,6 +3607,7 @@ module.exports = function (str) {
 };
 
 },{"html-tags":13}],15:[function(require,module,exports){
+
 var vDOM = require('./vDOM.js');
 if (!Array.prototype.filter) {
     Array.prototype.filter = function (fun/*, thisArg*/) {
@@ -3792,7 +3793,9 @@ module.exports = function (DOM1, DOM2, entry) {
                                 removals.unshift({
                                     t: "remove",
                                     p: getPath(oldChild, newPath),
-                                    i: newIndex
+                                    i: newIndex,
+                                    l: oldChild.listeners,
+                                    hl: oldChild.hasListeners
                                 });
                             }
                         } else {
@@ -3826,11 +3829,15 @@ module.exports = function (DOM1, DOM2, entry) {
                                     if (newChild.hasListeners) {
                                         var domNode = document.querySelector(getPath(oldChild, newPath));
                                         for (var event in newChild.listeners) {
-                                            for (var i=0; i<newChild.listeners[event].length; i++) {
-                                                var listener = newChild.listeners[event][i];
+                                            for (var k=0; k<newChild.listeners[event].length; k++) {
+                                                var listener = newChild.listeners[event][k];
                                                 if (!listener._isAttached) {
                                                     listener._isAttached = true;
                                                     domNode.addEventListener(event, listener);
+                                                } else if (listener._detach) {
+                                                    domNode.removeEventListener(event, listener);
+                                                    newChild.listeners[event].splice(k,1);
+                                                    k--;
                                                 }
                                             }
                                         }
@@ -3846,8 +3853,8 @@ module.exports = function (DOM1, DOM2, entry) {
                 p: getPath(newNode, path),
                 n: newNode,
                 i: index,
-                l: newChild.listeners,
-                hl: newChild.hasListeners
+                l: newNode.listeners,
+                hl: newNode.hasListeners
             });
         }
     }
@@ -3856,6 +3863,7 @@ module.exports = function (DOM1, DOM2, entry) {
     return ops.concat(removals);
 }
 },{"./vDOM.js":19}],16:[function(require,module,exports){
+
 var isReady = false,
     domready = require('domready'),
     vDOM = require('./vDOM.js'),
@@ -3864,6 +3872,7 @@ var isReady = false,
     virtualQuery = require('./virtualQuery.js'),
     selectorEngine = require('./selectorEngine.js'),
     isHTML = require('is-html'),
+    cloneObject = require("clone"),
     oldDOM,
     newDOM;
 
@@ -3885,8 +3894,7 @@ function renderTimer() {
             var d = diff(oldDOM, newDOM, "html");
             if (d.length > 0)
                 render.render(d, document.querySelector("html"));
-            oldDOM = newDOM;
-            newDOM = vDOM.createVDOM(document.querySelector('html').outerHTML);
+            oldDOM = cloneObject(newDOM);
             newDOM.changed = false;
             window.setTimeout(renderTimer, 1);
         });
@@ -3918,7 +3926,12 @@ vQuery = function(arg) {
                 if (nodes.length > 0) {
                     return new virtualQuery(nodes);
                 } else return nodes;
-            }             
+            }  
+        case "object":
+            prepareDOMs();
+            if (arg instanceof vDOM.virtualNode) {
+                return new virtualQuery(arg);
+            }        
     }
 }
 //dev helper
@@ -3926,7 +3939,8 @@ vQuery.getDOM = function() {
     return [oldDOM, newDOM];
 }
 
-},{"./diff.js":15,"./render.js":17,"./selectorEngine.js":18,"./vDOM.js":19,"./virtualQuery.js":20,"domready":9,"is-html":14}],17:[function(require,module,exports){
+},{"./diff.js":15,"./render.js":17,"./selectorEngine.js":18,"./vDOM.js":19,"./virtualQuery.js":20,"clone":6,"domready":9,"is-html":14}],17:[function(require,module,exports){
+
 var vDOM = require('./vDOM.js');
 var rendering = false;
 var decodeEntities = (function() {
@@ -3992,6 +4006,8 @@ module.exports = {
                     var node = root.querySelector(op.p),
                         parent = node.parentNode ? node.parentNode : root;
                     parent.removeChild(node);
+                    if (op.hl)
+                        handleListeners(node, op.l);
                     break;
                 case "addNode":
                     var newNode = createNode(op.n),
@@ -4018,6 +4034,7 @@ module.exports = {
     }
 }
 },{"./vDOM.js":19}],18:[function(require,module,exports){
+
 var CssSelectorParser = require('css-selector-parser').CssSelectorParser,
     sparser = new CssSelectorParser();
 
@@ -4092,17 +4109,34 @@ module.exports.query = function(vDOM, selector) {
     return selectedNodes;
 }
 },{"css-selector-parser":7}],19:[function(require,module,exports){
+
 //# Virtual DOM
 var htmlParser = require('html-parser'),
-    clone = require("clone");
+    cloneObject = require("clone");
 //## sets the root node to "changed"
+
+function clone(nodes) {
+    var newNodes = [];
+    for (var i=0; i<nodes.length; i++) {
+        var clone = cloneObject(nodes[i]);
+        if (clone.hasListeners)
+            for (var event in clone.listeners) {
+                for (var i = 0; i < clone.listeners[event].length; i++) {
+                    var listener = clone.listeners[event][i];
+                    listener._isAttached = false;
+                }
+            }
+        newNodes.push(clone);
+    } 
+    newNodes.prototype = nodes.prototype;
+    return newNodes;
+}
 function setChanged(node) {
     while (node.parentNode) {
         node = node.parentNode;
     }
     node.changed = true;
 }
-
 function virtualNode(name, parentNode) {
     Object.assign(this, {
             name: name,
@@ -4114,7 +4148,8 @@ function virtualNode(name, parentNode) {
             childNodes: [],
             id: null,
             listeners: {},
-            hasListeners: false
+            hasListeners: false,
+            removeListeners: []
     });
 };
 function virtualTextNode(value, parentNode) {
@@ -4378,10 +4413,32 @@ module.exports = {
     on: function(nodes, event, callback) {
         for (var i=0; i<nodes.length; i++) {
             var node = nodes[i];
+            var listener = (function(node, callback) {
+                var newListener = function (event) {
+                    callback.call(node, event);
+                }
+                newListener._originalCallback = callback;
+                newListener._detach = false;
+                newListener._isAttached = false;
+                return newListener
+            })(node, callback);
             if (typeof node.listeners[event] === "undefined")
-                node.listeners[event] = [callback];
+                node.listeners[event] = [listener];
             else
-                node.listeners[event].push(callback);
+                node.listeners[event].push(listener);
+            node.hasListeners = true;
+        }
+        setChanged(nodes[0]);
+    },
+    off: function(nodes, event, callback) {
+        for (var i=0; i<nodes.length; i++) {
+            var node = nodes[i];
+            if (typeof node.listeners[event] !== "undefined")
+                for (var i=0; i<node.listeners[event].length; i++) {
+                    var listener = node.listeners[event][i];
+                    if (listener._originalCallback === callback && listener._isAttached)
+                        listener._detach = true;
+                }
             node.hasListeners = true;
         }
         setChanged(nodes[0]);
@@ -4448,16 +4505,14 @@ Object.assign(virtualQuery.prototype, {
     prependTo: function (arg) {
         switch (typeof arg) {
             case "string":
-                vDOM.addChildFromVNodes([vDOM.createVDOM(arg)], this, "start");
-                return this;
+                return new virtualQuery(vDOM.addChildFromVNodes([vDOM.createVDOM(arg)], this, "start"));
             case "object":
                 if (arg instanceof vDOM.virtualNode) {
-                    vDOM.addChildFromVNodes([arg], this, "start");
+                    return new virtualQuery(vDOM.addChildFromVNodes([arg], this, "start"));
                 }
                 if (arg instanceof virtualQuery) {
-                    vDOM.addChildFromVNodes(arg, this, "start");
+                    return new virtualQuery(vDOM.addChildFromVNodes(arg, this, "start"));
                 }
-                return this;
         }
     },
     remove: function () {
@@ -4518,6 +4573,9 @@ Object.assign(virtualQuery.prototype, {
     },
     on: function(event, callback) {
         vDOM.on(this, event, callback);
+    },
+    off: function(event, callback) {
+        vDOM.off(this, event, callback);
     }
 });
 module.exports = virtualQuery;

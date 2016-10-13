@@ -1,3 +1,4 @@
+
 var isReady = false,
     domready = require('domready'),
     vDOM = require('./vDOM.js'),
@@ -6,6 +7,7 @@ var isReady = false,
     virtualQuery = require('./virtualQuery.js'),
     selectorEngine = require('./selectorEngine.js'),
     isHTML = require('is-html'),
+    cloneObject = require("clone"),
     oldDOM,
     newDOM;
 
@@ -27,8 +29,7 @@ function renderTimer() {
             var d = diff(oldDOM, newDOM, "html");
             if (d.length > 0)
                 render.render(d, document.querySelector("html"));
-            oldDOM = newDOM;
-            newDOM = vDOM.createVDOM(document.querySelector('html').outerHTML);
+            oldDOM = cloneObject(newDOM);
             newDOM.changed = false;
             window.setTimeout(renderTimer, 1);
         });
@@ -60,7 +61,12 @@ vQuery = function(arg) {
                 if (nodes.length > 0) {
                     return new virtualQuery(nodes);
                 } else return nodes;
-            }             
+            }  
+        case "object":
+            prepareDOMs();
+            if (arg instanceof vDOM.virtualNode) {
+                return new virtualQuery(arg);
+            }        
     }
 }
 //dev helper

@@ -125,6 +125,9 @@ Object.assign(virtualQuery.prototype, {
     },
     on: function(event, callback) {
         vDOM.on(this, event, callback);
+    },
+    off: function(event, callback) {
+        vDOM.off(this, event, callback);
     }
 });
 module.exports = virtualQuery;

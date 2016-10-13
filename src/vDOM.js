@@ -1,14 +1,31 @@
+
 //# Virtual DOM
 var htmlParser = require('html-parser'),
-    clone = require("clone");
+    cloneObject = require("clone");
 //## sets the root node to "changed"
+
+function clone(nodes) {
+    var newNodes = [];
+    for (var i=0; i<nodes.length; i++) {
+        var clone = cloneObject(nodes[i]);
+        if (clone.hasListeners)
+            for (var event in clone.listeners) {
+                for (var i = 0; i < clone.listeners[event].length; i++) {
+                    var listener = clone.listeners[event][i];
+                    listener._isAttached = false;
+                }
+            }
+        newNodes.push(clone);
+    } 
+    newNodes.prototype = nodes.prototype;
+    return newNodes;
+}
 function setChanged(node) {
     while (node.parentNode) {
         node = node.parentNode;
     }
     node.changed = true;
 }
-
 function virtualNode(name, parentNode) {
     Object.assign(this, {
             name: name,
@@ -20,7 +37,8 @@ function virtualNode(name, parentNode) {
             childNodes: [],
             id: null,
             listeners: {},
-            hasListeners: false
+            hasListeners: false,
+            removeListeners: []
     });
 };
 function virtualTextNode(value, parentNode) {
@@ -284,10 +302,32 @@ module.exports = {
     on: function(nodes, event, callback) {
         for (var i=0; i<nodes.length; i++) {
             var node = nodes[i];
+            var listener = (function(node, callback) {
+                var newListener = function (event) {
+                    callback.call(node, event);
+                }
+                newListener._originalCallback = callback;
+                newListener._detach = false;
+                newListener._isAttached = false;
+                return newListener
+            })(node, callback);
             if (typeof node.listeners[event] === "undefined")
-                node.listeners[event] = [callback];
+                node.listeners[event] = [listener];
             else
-                node.listeners[event].push(callback);
+                node.listeners[event].push(listener);
+            node.hasListeners = true;
+        }
+        setChanged(nodes[0]);
+    },
+    off: function(nodes, event, callback) {
+        for (var i=0; i<nodes.length; i++) {
+            var node = nodes[i];
+            if (typeof node.listeners[event] !== "undefined")
+                for (var i=0; i<node.listeners[event].length; i++) {
+                    var listener = node.listeners[event][i];
+                    if (listener._originalCallback === callback && listener._isAttached)
+                        listener._detach = true;
+                }
             node.hasListeners = true;
         }
         setChanged(nodes[0]);

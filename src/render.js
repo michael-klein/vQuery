@@ -1,3 +1,4 @@
+
 var vDOM = require('./vDOM.js');
 var rendering = false;
 var decodeEntities = (function() {
@@ -63,6 +64,8 @@ module.exports = {
                     var node = root.querySelector(op.p),
                         parent = node.parentNode ? node.parentNode : root;
                     parent.removeChild(node);
+                    if (op.hl)
+                        handleListeners(node, op.l);
                     break;
                 case "addNode":
                     var newNode = createNode(op.n),

@@ -6,8 +6,19 @@ var isReady = false,
     render = require('./render.js'),
     virtualQuery = require('./virtualQuery.js'),
     selectorEngine = require('./selectorEngine.js'),
-    isHTML = require('is-html'),
-    cloneObject = require("clone");
+    cloneObject = require("clone"),
+    rquickExpr = /^(?:\s*(<[\w\W]+>)[^>]*|#([\w-]+))$/;
+
+
+function isHTML(str) {
+    //taken from the jQuery source: https://github.com/jquery/jquery/blob/master/src/core/init.js
+    if (str[0] === "<" && str[str.length - 1] === ">" && str.length >= 3) {
+            return true;
+    } else {
+        var match = rquickExpr.exec(str);
+        return match !== null && match[1];
+    }
+}
 
 function prepareDOMs() {
     if (!vDOM.oldDOM) {

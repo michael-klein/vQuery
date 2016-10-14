@@ -17,12 +17,7 @@
                 var lastID=null; 
                 var t = new Date().getTime();
                 for (var i=0; i<1000;i++) {
-                var $p = $('#test >div h1 p');
-                console.log($p)
-                    if (lastID)
-                        $('#test >div h1 p div#' + lastID).remove();
-                    $p.prepend("<div id=\"n" + i + "\">hi</div>");
-                    lastID = "n" + i;
+                    var $p = $('#test >div h1 p');
                 }                    
                 console.log("iTime: ", new Date().getTime() - t)
                 var listener = function(e) {

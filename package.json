@@ -14,7 +14,6 @@
     "domready": "^1.0.8",
     "html-parser": "^0.10.0",
     "is-html": "^1.0.0",
-    "sizzle": "^2.3.3",
     "strictify": "^0.2.0"
   },
   "devDependencies": {

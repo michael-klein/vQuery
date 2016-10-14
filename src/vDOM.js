@@ -1,8 +1,7 @@
 
 //# Virtual DOM
 var htmlParser = require('html-parser'),
-    cloneObject = require("clone"),
-    virtualDocument = require('./virtualDocument.js');
+    cloneObject = require("clone");
 //## sets the root node to "changed"
 
 function clone(nodes) {
@@ -84,15 +83,9 @@ module.exports = {
     //### creates a virtual DOM from passed HTML
     virtualNode: virtualNode,
     virtualTextNode: virtualTextNode,
-    oldDOM: null,
     newDOM: null,
-    prepareDOMs: function() {
-        if(!this.oldDOM) {
-            this.oldDOM = new virtualDocument(document);
-            this.newDOM = new virtualDocument(document);
-            console.log(this.oldDOM.getElementsByTagName, this.newDOM)
-        }
-    },
+    oldDOM: null,
+    idNodes: {},
     createVDOM: function (html, init) {
         var frag = document.createDocumentFragment(),
             tmp = document.createElement('body'), child;

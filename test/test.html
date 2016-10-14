@@ -16,7 +16,7 @@
             $(function() {
                 var lastID=null; 
                 var t = new Date().getTime();
-                for (var i=0; i<10000;i++) {
+                for (var i=0; i<1000;i++) {
                     var $p = $('#test >div h1 p');
                     
                     if (lastID)
@@ -25,12 +25,12 @@
                     lastID = "n" + i;
                     
                 }                    
+                console.log("iTime: ", new Date().getTime() - t)
                 var listener = function(e) {
                     console.log("click")
                     $(this).off("click", listener);
                 };
                 $('<div>click</div>').appendTo($('#append')).on("click", listener);
-                console.log("iTime: ", new Date().getTime() - t)
             });
         </script>
     </head>

@@ -1,6 +1,48 @@
 
 //# Virtual DOM
-var htmlParser = require('html-parser'),
+var HTMLParser = require('htmlparser2'),
+    htmlParser = (function() {
+        var cNode,
+            init=false,
+            self,
+            parser = new HTMLParser.Parser({
+            onopentag: function (name, attribs) {
+                var node = new virtualNode(name, cNode);
+                cNode.children.push(node);
+                cNode.childNodes.push(node);
+                cNode = node;
+                for (var aName in attribs) {
+                    var value = attribs[aName];
+                    if (aName === "id")
+                        cNode.id = value;
+                    if (aName === "class")
+                        cNode.classNames.push(value.split(" "));
+                    cNode.attributes[aName] = value;
+                }
+            },
+            ontext: function (value) {
+                if (value.trim().length === 0) return;
+                cNode.childNodes.push(new virtualTextNode(value, cNode));
+            },
+            onclosetag: function (name) {
+                if (cNode.name === name) {
+                    cNode = cNode.parentNode;
+                    if (init && cNode.id)
+                        self.idNodes[cNode.id] = cNode;
+                }
+            }
+        }, {decodeEntities: true});
+
+        return function(html, initIn, cNodeIn, selfIn) {
+            if (typeof initIn === "undefined")
+                init = false;
+            else init = initIn;
+            self = selfIn;
+            cNode = cNodeIn;
+            parser.parseComplete(html);
+        }
+    }
+    )(),
     cloneObject = require("clone");
 //## sets the root node to "changed"
 
@@ -87,44 +129,8 @@ module.exports = {
     oldDOM: null,
     idNodes: {},
     createVDOM: function (html, init) {
-        var cNode = new virtualNode("root", null)
-            self = this;
-        htmlParser.parse(html.replace(/\r?\n|\r/g, ""), {
-            openElement: function (name) {
-                var node = new virtualNode(name, cNode);
-                cNode.children.push(node);
-                cNode.childNodes.push(node);
-                cNode = node;
-            },
-            closeOpenedElement: function (name, token, unary) {
-                if (unary && cNode.name === name)
-                    cNode = cNode.parentNode;
-            },
-            closeElement: function (name) {
-                if (cNode.name === name) {
-                    cNode = cNode.parentNode;
-                    if (init && cNode.id)
-                        self.idNodes[cNode.id] = cNode;
-                }
-            },
-            comment: function (value) {
-            },
-            cdata: function (value) {
-            },
-            attribute: function (name, value) {
-                if (name === "id")
-                    cNode.id = value;
-                if (name === "class")
-                    cNode.classNames.push(value.split(" "));
-                cNode.attributes[name] = value;
-            },
-            docType: function (value) {
-            },
-            text: function (value) {
-                if (value.trim().length===0) return;
-                cNode.childNodes.push(new virtualTextNode(value, cNode));
-            }
-        });
+        cNode = new virtualNode("root", null);
+        htmlParser(html.replace(/\r?\n|\r/g, ""), init, cNode, this);
         return cNode;
     },
     //creates a new vitual node from passed html and appends it to all virtual nodes

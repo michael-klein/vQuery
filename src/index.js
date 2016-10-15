@@ -7,7 +7,8 @@ var isReady = false,
     virtualQuery = require('./virtualQuery.js'),
     selectorEngine = require('./selectorEngine.js'),
     cloneObject = require("clone"),
-    rquickExpr = /^(?:\s*(<[\w\W]+>)[^>]*|#([\w-]+))$/;
+    rquickExpr = /^(?:\s*(<[\w\W]+>)[^>]*|#([\w-]+))$/,
+    afterRenderCallbacks = [];
 
 
 function isHTML(str) {
@@ -38,6 +39,8 @@ function renderTimer() {
             var d = diff(vDOM.oldDOM, vDOM.newDOM, "html");
             if (d.length > 0)
                 render.render(d, document.querySelector("html"));
+            for (var i=0; i<afterRenderCallbacks.length; i++)
+                afterRenderCallbacks[i]();
             vDOM.oldDOM = cloneObject(vDOM.newDOM);
             vDOM.newDOM.changed = false;
             window.setTimeout(renderTimer, 1);
@@ -78,6 +81,11 @@ vQuery = function(arg) {
             }        
     }
 }
+
+vQuery.afterRender = function(cb) {
+    afterRenderCallbacks.push(cb);
+};
+
 vQuery.getDOM = function() {
     return [vDOM.oldDOM, vDOM.newDOM];
 }

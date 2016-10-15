@@ -81,8 +81,12 @@ Object.assign(virtualQuery.prototype, {
         return vDOM.hasClass(this, classIn);
     },
     html: function (html) {
-        vDOM.setHTML(this, html);
-        return this;
+        if (typeof html !== "undefined") {
+            vDOM.setHTML(this, html);
+            return this;
+        } else {
+            return vDOM.getHTML(this);
+        }
     },
     attr: function() {
         var args = [].slice.call(arguments);

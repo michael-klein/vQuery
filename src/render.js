@@ -1,40 +1,8 @@
 
-var vDOM = require('./vDOM.js');
-var rendering = false;
-var decodeEntities = (function() {
-    // this prevents any overhead from creating the object each time
-    var element = document.createElement('div');
+var vDOM = require('./vDOM.js'),
+    utils = require('./utils.js'),
+    rendering = false;
 
-    function decodeHTMLEntities (str) {
-        if(str && typeof str === 'string') {
-            // strip script/html tags
-            str = str.replace(/<script[^>]*>([\S\s]*?)<\/script>/gmi, '');
-            str = str.replace(/<\/?\w(?:[^"'>]|"[^"]*"|'[^']*')*>/gmi, '');
-            element.innerHTML = str;
-            str = element.textContent;
-            element.textContent = '';
-        }
-
-        return str;
-    }
-
-    return decodeHTMLEntities;
-})();
-function createNode(data) {
-    var node = document.createElement(data.name);
-    for (var i in data.attributes) {
-        node.setAttribute(i, data.attributes[i]);
-    }
-    if (typeof data.childNodes !== "undefined")
-        for (var i=0; i<data.childNodes.length; i++) {
-            var child =createNode(data.childNodes[i]);
-            if (typeof child !== "undefined")
-                node.appendChild(child);
-        }
-    if (data instanceof vDOM.virtualTextNode)
-        node.appendChild(document.createTextNode(decodeEntities(data.value)));
-    return node;
-}
 function handleListeners(domNode, listeners) {
     for (var event in listeners) {
             for (var i = 0; i < listeners[event].length; i++) {
@@ -68,14 +36,14 @@ module.exports = {
                         handleListeners(node, op.l);
                     break;
                 case "addNode":
-                    var newNode = createNode(op.n),
+                    var newNode = utils.createNode(op.n,vDOM),
                         parent = op.p.length > 0 ? root.querySelector(op.p) : root;
                     parent.appendChild(newNode);
                     if (op.hl)
                         handleListeners(newNode, op.l);
                     break;
                 case "replace":
-                    var newNode = createNode(op.n),
+                    var newNode = utils.createNode(op.n,vDOM),
                         node = root.querySelector(op.p),
                         parent = node.parentNode ? node.parentNode : root;
                     parent.replaceChild(newNode, node);

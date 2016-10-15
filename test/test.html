@@ -12,11 +12,20 @@
         <script src="../dist/index.js"></script>
         <script   src="http://code.jquery.com/jquery-3.1.1.min.js"   integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="   crossorigin="anonymous"></script>
         <script>
-            var $ = vQuery;
+            var $ = vQuery,
+                numMutations = 0;
             $(function() {
                 var lastID=null; 
                 var t = new Date().getTime();
-                for (var i=0; i<1000;i++) {
+                vQuery.afterRender(function() {
+                    console.log("iTime: ", new Date().getTime() - t);
+                });
+                var observer = new MutationObserver(function(mutations) {
+                    numMutations+=mutations.length;
+                });
+                var config = { attributes: true, childList: true, characterData: true, subtree: true};
+                observer.observe(document.body, config);
+                for (var i=0; i<10000;i++) {
                     var $p = $('#test >div h1 p');
                     
                     if (lastID)
@@ -25,12 +34,15 @@
                     lastID = "n" + i;
                     
                 }                    
-                console.log("iTime: ", new Date().getTime() - t)
+                window.setTimeout(function() {
+                    console.log("mutations: ", numMutations);
+                },100)
                 var listener = function(e) {
                     console.log("click")
                     $(this).off("click", listener);
                 };
                 $('<div>click</div>').appendTo($('#append')).on("click", listener);
+                console.log($('body').html())
             });
         </script>
     </head>

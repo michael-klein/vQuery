@@ -43,6 +43,7 @@ var HTMLParser = require('htmlparser2'),
         }
     }
     )(),
+    utils = require('./utils.js'),
     cloneObject = require("clone");
 //## sets the root node to "changed"
 
@@ -283,7 +284,7 @@ module.exports = {
         setChanged(nodes[0]);
     },
     //generated virtual DOM from passed html and replaces the children of the passed nodes with it
-    setHTML: function(node, html) {
+    setHTML: function(nodes, html) {
         var self = this;
         function removeHelper(nodes) {
             for (var i=0; i<node.children.length; i++)
@@ -305,6 +306,10 @@ module.exports = {
             node.childNodes = this.createVDOM(html).childNodes;    
         }
         setChanged(nodes[0]);
+    },
+    //return innerHTML for a node
+    getHTML: function(nodes, html) {
+        return utils.createNode(nodes[0], this).innerHTML;
     },
     //Get the value of an attribute for the first element in the set of matched elements
     getAttribute(nodes, attribute) {

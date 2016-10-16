@@ -9084,7 +9084,7 @@ var CssSelectorParser = require('css-selector-parser').CssSelectorParser,
 
 sparser.registerSelectorPseudos('has', 'not');
 sparser.registerNestingOperators('>', '+', '~');
-sparser.registerAttrEqualityMods('^', '$', '*', '~');
+sparser.registerAttrEqualityMods('^', '$', '*', '~', '|');
 sparser.enableSubstitutes();
 
 function hasMoreRules(rules) {
@@ -9217,10 +9217,39 @@ function checkNesting(rules, node) {
     }
     return true;
 }
+checkAttr = function (rules, node) {
+    if (typeof rules.attrs === "undefined")
+        return true;
+    var attributeKeys = Object.keys(node.attributes);
+    if (rules.attrs.length > attributeKeys.length)
+        return false;
+    for (var i=0; i<rules.attrs.length; i++) {
+        var attr = rules.attrs[i],
+            nodeAttr = node.attributes[attr.name.toLowerCase()];
+        if (typeof nodeAttr === "undefined")
+            return false;
+        if (typeof attr.operator !== "undefined") {
+            switch (attr.operator) {
+                case "=":
+                    if (nodeAttr !== attr.value) return false;
+                case "~=":
+                case "*=":
+                    if (nodeAttr.indexOf(attr.value) !== -1) return false;
+                case "|=":
+                case "^=":
+                    if (nodeAttr.indexOf(attr.value) === 0) return false;
+                case "$=":
+                    if (nodeAttr.indexOf(attr.value, nodeAttr.length - attr.value.length) !== -1) return false;
+            }
+        }
+    }
+    return true;
+}
 var checks = [
     checkTagName,
     checkID,
     checkClasses,
+    checkAttr,
     checkNesting,
     checkPseudos
 ]
@@ -9243,17 +9272,8 @@ function traverseVDOM(rules, currentVDOM, selectedNodes, exact, pseudoMode) {
         if (rule.id && !pseudoMode) {
             var idNode = vDOM.idNodes[rule.id];
             if (typeof idNode !== "undefined" && idNode.length !== []) {
-                if (!hasMoreRules(rule)) {
-                    if (selectedNodes.indexOf(idNode) === -1)
-                        selectedNodes.push(idNode);
-                }
-                else {
-                    var nextRules = getNextRules(rule);
-                    for (var i = 0; i < idNode.children.length; i++) {
-                        traverseVDOM(nextRules, idNode.children[i], selectedNodes, nextRules.nestingOperator === ">", pseudoMode);
-                    }
-                }
-                continue;
+                delete rule.id;
+                currentVDOM = idNode;
             }
         }
         if (checkHits(rule, currentVDOM)) {

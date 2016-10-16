@@ -9093,12 +9093,12 @@ function hasMoreRules(rules) {
 
 function getNextRules(rules) {
     if (typeof rules.ruleSet !== "undefined")
-        return [rules.ruleSet];
+        return rules.ruleSet.rule;
     if (typeof rules.selectors !== "undefined")
         return rules.selectors.map(function(item) {
             return item.rule
         });
-    else return [rules.rule];
+    else return rules.rule;
 };
 
 function checkClasses(rules, node) {
@@ -9112,7 +9112,7 @@ function checkClasses(rules, node) {
 }
 
 function checkTagName(rules, node) {
-    if (typeof rules.tagName === "undefined")
+    if (typeof rules.tagName === "undefined" || rules.tagName === "*")
         return true;
     if (rules.tagName === node.name)
         return true;
@@ -9172,10 +9172,56 @@ function checkPseudos(rules, node) {
     }
     return false;    
 }
+
+function checkNesting(rules, node) {
+    if (typeof rules.nestingOperator === "undefined")
+        return true;
+    var nextRules = getNextRules(rules);
+    if (typeof nextRules !== "undefined" && typeof nextRules.nestingOperator !== "undefined") {
+        return true;
+    }
+    var prevSibling = node;
+    while (typeof rules !== "undefined") {
+        switch (rules.nestingOperator) {
+            case "+":
+            case "~":
+                var siblings = node.parentNode.children,
+                    sibling;
+                switch (rules.nestingOperator) {
+                    case "+":
+                        var index = siblings.indexOf(prevSibling);
+                        if (index === 0)
+                            return false;
+                        sibling = siblings[index - 1];
+                        prevSibling = sibling;
+                        if (!checkTagName(rules.prevRule, sibling))
+                            return false;
+                        break;
+                    case "~":
+                        var index = siblings.indexOf(prevSibling);
+                        if (index === 0)
+                            return false;
+                        while (index>0) {
+                            index--;
+                            sibling = siblings[index];
+                            if (checkTagName(rules.prevRule, sibling)) {
+                                prevSibling = sibling;
+                                break;
+                            }
+                            return false;
+                        }
+                        break;
+                }
+        }
+        rules = rules.prevRule;
+    }
+    return true;
+}
 var checks = [
     checkTagName,
     checkID,
     checkClasses,
+    checkNesting,
     checkPseudos
 ]
 checkHits = function(rules, currentVDOM) {
@@ -9188,8 +9234,12 @@ checkHits = function(rules, currentVDOM) {
 }
 
 function traverseVDOM(rules, currentVDOM, selectedNodes, exact, pseudoMode) {
-    for (var r=0; r<rules.length; r++) {
-        var rule = rules[r];
+    if (typeof rules.length === "undefined")
+        var iterator = [rules];
+    else
+        var iterator = rules;
+    for (var r=0; r<iterator.length; r++) {
+        var rule = iterator[r];
         if (rule.id && !pseudoMode) {
             var idNode = vDOM.idNodes[rule.id];
             if (typeof idNode !== "undefined" && idNode.length !== []) {
@@ -9210,17 +9260,26 @@ function traverseVDOM(rules, currentVDOM, selectedNodes, exact, pseudoMode) {
             if (!hasMoreRules(rule)) {
                 if (selectedNodes.indexOf(currentVDOM) === -1)
                     selectedNodes.push(currentVDOM);
+                if (!exact && currentVDOM.children.length > 0)
+                    for (var i = 0; i < currentVDOM.children.length; i++) {
+                        traverseVDOM(rule, currentVDOM.children[i], selectedNodes, exact, pseudoMode, prevRule);
+                    }
             }
             else {
                 var nextRules = getNextRules(rule);
-                for (var i = 0; i < currentVDOM.children.length; i++) {
-                    traverseVDOM(nextRules, currentVDOM.children[i], selectedNodes, nextRules.nestingOperator === ">", pseudoMode);
-                }
+                if (typeof nextRules.nestingOperator !== "undefined" && nextRules.nestingOperator !== ">") {
+                    nextRules.prevRule = rule;
+                    traverseVDOM(nextRules, currentVDOM, selectedNodes, exact, pseudoMode);
+                } else
+                    if (nextRules)
+                        for (var i = 0; i < currentVDOM.children.length; i++) {
+                            traverseVDOM(nextRules, currentVDOM.children[i], selectedNodes, nextRules.nestingOperator === ">", pseudoMode);
+                        }
             }
         } else
             if (!exact && currentVDOM.children.length > 0)
                 for (var i = 0; i < currentVDOM.children.length; i++)
-                    traverseVDOM(rules, currentVDOM.children[i], selectedNodes, pseudoMode);
+                    traverseVDOM(rules, currentVDOM.children[i], selectedNodes, exact, pseudoMode);
     }
 }
 
@@ -9228,9 +9287,9 @@ module.exports.query = function(virtualNode, selector) {
     var parsedSelector = sparser.parse(selector),
         selectedNodes = [],
         nextRules = getNextRules(parsedSelector);
-    
+    console.log(parsedSelector)
     if (hasMoreRules(parsedSelector))
-        traverseVDOM(nextRules, virtualNode.children[0], selectedNodes, nextRules.nestingOperator === ">", false);
+        traverseVDOM(nextRules, virtualNode.children[0], selectedNodes, nextRules.nestingOperator === ">", false, null);
     return selectedNodes;
 }
 },{"./vDOM.js":68,"css-selector-parser":28}],67:[function(require,module,exports){

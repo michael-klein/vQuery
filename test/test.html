@@ -15,6 +15,7 @@
             var $ = vQuery,
                 numMutations = 0;
             $(function() {
+                console.log($('div+div')); console.log($('div~div')); return;
                 var lastID=null; 
                 var t = new Date().getTime();
                 vQuery.afterRender(function() {
@@ -42,7 +43,9 @@
                     $(this).off("click", listener);
                 };
                 $('<div>click</div>').appendTo($('#append')).on("click", listener);
+                if ($.update)
                 $.update();
+                else console.log("iTime: ", new Date().getTime() - t)
                 console.log($('body').html());
             }, {
                 autoUpdate: false

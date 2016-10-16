@@ -8915,7 +8915,7 @@ module.exports = function (DOM1, DOM2, entry) {
     helper(DOM1, DOM2, [entry], 1);
     return ops.concat(removals);
 }
-},{"./vDOM.js":68}],63:[function(require,module,exports){
+},{"./vDOM.js":73}],63:[function(require,module,exports){
 require("./arrayFunctions.js");
 var isReady = false,
     domready = require('domready'),
@@ -8923,7 +8923,7 @@ var isReady = false,
     utils = require('./utils.js'),
     render = require('./render.js'),
     virtualQuery = require('./virtualQuery.js'),
-    selectorEngine = require('./selectorEngine.js'),
+    selectorEngine = require('./selectorEngine/selectorEngine.js'),
     options = require('./options.js');
 
 
@@ -9000,7 +9000,7 @@ vQuery.getDOM = function() {
     return [vDOM.oldDOM, vDOM.newDOM];
 }
 
-},{"./arrayFunctions.js":61,"./options.js":64,"./render.js":65,"./selectorEngine.js":66,"./utils.js":67,"./vDOM.js":68,"./virtualQuery.js":69,"domready":36}],64:[function(require,module,exports){
+},{"./arrayFunctions.js":61,"./options.js":64,"./render.js":65,"./selectorEngine/selectorEngine.js":70,"./utils.js":72,"./vDOM.js":73,"./virtualQuery.js":74,"domready":36}],64:[function(require,module,exports){
 arguments[4][2][0].apply(exports,arguments)
 },{"dup":2}],65:[function(require,module,exports){
 
@@ -9076,31 +9076,39 @@ module.exports = {
         rendering = false;
     }
 }
-},{"./diff.js":62,"./utils.js":67,"./vDOM.js":68,"clone":27}],66:[function(require,module,exports){
-
-var CssSelectorParser = require('css-selector-parser').CssSelectorParser,
-    sparser = new CssSelectorParser(),
-    vDOM = require('./vDOM.js');
-
-sparser.registerSelectorPseudos('has', 'not');
-sparser.registerNestingOperators('>', '+', '~');
-sparser.registerAttrEqualityMods('^', '$', '*', '~', '|');
-sparser.enableSubstitutes();
-
-function hasMoreRules(rules) {
-    return typeof rules.rule !== "undefined" || typeof rules.ruleSet !== "undefined"|| typeof rules.selectors !== "undefined";
+},{"./diff.js":62,"./utils.js":72,"./vDOM.js":73,"clone":27}],66:[function(require,module,exports){
+checkAttr = function (rules, node) {
+    if (typeof rules.attrs === "undefined")
+        return true;
+    var attributeKeys = Object.keys(node.attributes);
+    if (rules.attrs.length > attributeKeys.length)
+        return false;
+    for (var i=0; i<rules.attrs.length; i++) {
+        var attr = rules.attrs[i],
+            nodeAttr = node.attributes[attr.name.toLowerCase()];
+        if (typeof nodeAttr === "undefined")
+            return false;
+        if (typeof attr.operator !== "undefined") {
+            switch (attr.operator) {
+                case "=":
+                    if (nodeAttr !== attr.value) return false;
+                case "~=":
+                case "*=":
+                    if (nodeAttr.indexOf(attr.value) !== -1) return false;
+                case "|=":
+                case "^=":
+                    if (nodeAttr.indexOf(attr.value) === 0) return false;
+                case "$=":
+                    if (nodeAttr.indexOf(attr.value, nodeAttr.length - attr.value.length) !== -1) return false;
+            }
+        }
+    }
+    return true;
 }
-
-function getNextRules(rules) {
-    if (typeof rules.ruleSet !== "undefined")
-        return rules.ruleSet.rule;
-    if (typeof rules.selectors !== "undefined")
-        return rules.selectors.map(function(item) {
-            return item.rule
-        });
-    else return rules.rule;
-};
-
+module.exports = {
+    checkAttr:checkAttr
+}
+},{}],67:[function(require,module,exports){
 function checkClasses(rules, node) {
     if (typeof rules.classNames === "undefined")
         return true;
@@ -9111,14 +9119,6 @@ function checkClasses(rules, node) {
     return true;
 }
 
-function checkTagName(rules, node) {
-    if (typeof rules.tagName === "undefined" || rules.tagName === "*")
-        return true;
-    if (rules.tagName === node.name)
-        return true;
-    return false;    
-}
-
 function checkID(rules, node) {
     if (typeof rules.id === "undefined")
         return true;
@@ -9127,56 +9127,25 @@ function checkID(rules, node) {
     return false;    
 }
 
-function checkPseudos(rules, node) {
-    if (typeof rules.pseudos === "undefined")
+function checkTagName(rules, node) {
+    if (typeof rules.tagName === "undefined" || rules.tagName === "*")
         return true;
-    var pseudos = rules.pseudos;
-    for (var i=0; i<pseudos.length; i++) {
-        var pseudo = pseudos[i];
-        switch(pseudo.name) {
-            case "first-child":
-            case "last-child":
-            case "only-child":
-            case "nth-child":
-            case "nth-last-child":
-                var children = node.parentNode.children;
-                if (typeof rules.tagName !== "undefined")
-                    children = children.filter(function(child) {
-                        return child.name === rules.tagName;
-                    });
-                switch(pseudo.name) {
-                    case "first-child":
-                        return children.indexOf(node) === 0;
-                    case "last-child":
-                        return children.indexOf(node) === children.length - 1;
-                    case "nth-child":
-                        return children.indexOf(node) + 1 === parseInt(pseudo.value);
-                    case "nth-last-child":
-                        return children.reverse().indexOf(node) + 1 === parseInt(pseudo.value);
-                    case "only-child":
-                        return children.length === 1;
-                }
-            case "has":
-                var selectedNodes = [],
-                nextRules = getNextRules(pseudo.value);
-                for (var i = 0; i < node.children.length; i++) {
-                    traverseVDOM(nextRules, node.children[i], selectedNodes, nextRules.nestingOperator === ">", true);
-                }
-                return selectedNodes.length > 0;
-            case "not":
-                var selectedNodes = [],
-                nextRules = getNextRules(pseudo.value);
-                traverseVDOM(nextRules, node, selectedNodes, nextRules.nestingOperator === ">", true);
-                return selectedNodes.length === 0;
-        }
-    }
+    if (rules.tagName === node.name)
+        return true;
     return false;    
 }
 
+module.exports = {
+    checkClasses:checkClasses,
+    checkID:checkID,
+    checkTagName:checkTagName
+}
+},{}],68:[function(require,module,exports){
+var selectorUtils = require('./selectorUtils.js');
 function checkNesting(rules, node) {
     if (typeof rules.nestingOperator === "undefined" || !rules.nestingOperator || rules.nestingOperator === ">")
         return true;
-    var nextRules = getNextRules(rules);
+    var nextRules = selectorUtils.getNextRules(rules);
     if (typeof nextRules !== "undefined" && typeof nextRules.nestingOperator !== "undefined" && nextRules.nestingOperator) {
         return true;
     }
@@ -9217,41 +9186,82 @@ function checkNesting(rules, node) {
     }
     return true;
 }
-checkAttr = function (rules, node) {
-    if (typeof rules.attrs === "undefined")
+module.exports = {
+    checkNesting:checkNesting
+}
+},{"./selectorUtils.js":71}],69:[function(require,module,exports){
+var selectorUtils = require('./selectorUtils.js');
+function checkPseudos(rules, node) {
+    if (typeof rules.pseudos === "undefined")
         return true;
-    var attributeKeys = Object.keys(node.attributes);
-    if (rules.attrs.length > attributeKeys.length)
-        return false;
-    for (var i=0; i<rules.attrs.length; i++) {
-        var attr = rules.attrs[i],
-            nodeAttr = node.attributes[attr.name.toLowerCase()];
-        if (typeof nodeAttr === "undefined")
-            return false;
-        if (typeof attr.operator !== "undefined") {
-            switch (attr.operator) {
-                case "=":
-                    if (nodeAttr !== attr.value) return false;
-                case "~=":
-                case "*=":
-                    if (nodeAttr.indexOf(attr.value) !== -1) return false;
-                case "|=":
-                case "^=":
-                    if (nodeAttr.indexOf(attr.value) === 0) return false;
-                case "$=":
-                    if (nodeAttr.indexOf(attr.value, nodeAttr.length - attr.value.length) !== -1) return false;
-            }
+    var pseudos = rules.pseudos;
+    for (var i=0; i<pseudos.length; i++) {
+        var pseudo = pseudos[i];
+        switch(pseudo.name) {
+            case "first-child":
+            case "last-child":
+            case "only-child":
+            case "nth-child":
+            case "nth-last-child":
+                var children = node.parentNode.children;
+                if (typeof rules.tagName !== "undefined")
+                    children = children.filter(function(child) {
+                        return child.name === rules.tagName;
+                    });
+                switch(pseudo.name) {
+                    case "first-child":
+                        return children.indexOf(node) === 0;
+                    case "last-child":
+                        return children.indexOf(node) === children.length - 1;
+                    case "nth-child":
+                        return children.indexOf(node) + 1 === parseInt(pseudo.value);
+                    case "nth-last-child":
+                        return children.reverse().indexOf(node) + 1 === parseInt(pseudo.value);
+                    case "only-child":
+                        return children.length === 1;
+                }
+            case "has":
+                var selectedNodes = [],
+                nextRules = selectorUtils.getNextRules(pseudo.value);
+                for (var i = 0; i < node.children.length; i++) {
+                    selectorUtils.traverseVDOM(nextRules, node.children[i], selectedNodes, nextRules.nestingOperator === ">", true);
+                }
+                return selectedNodes.length > 0;
+            case "not":
+                var selectedNodes = [],
+                nextRules = selectorUtils.getNextRules(pseudo.value);
+                selectorUtils.traverseVDOM(nextRules, node, selectedNodes, nextRules.nestingOperator === ">", true);
+                return selectedNodes.length === 0;
         }
     }
-    return true;
+    return false;    
 }
+
+module.exports = {
+    checkPseudos:checkPseudos
+}
+},{"./selectorUtils.js":71}],70:[function(require,module,exports){
+
+var CssSelectorParser = require('css-selector-parser').CssSelectorParser,
+    sparser = new CssSelectorParser(),
+    selectorUtils = require('./selectorUtils.js'),
+    attributes = require('./attributes.js'),
+    identifiers = require('./identifiers.js'),
+    nesting = require('./nesting.js'),
+    pseudos = require('./pseudos.js');
+
+sparser.registerSelectorPseudos('has', 'not');
+sparser.registerNestingOperators('>', '+', '~');
+sparser.registerAttrEqualityMods('^', '$', '*', '~', '|');
+sparser.enableSubstitutes();
+
 var checks = [
-    checkTagName,
-    checkID,
-    checkClasses,
-    checkAttr,
-    checkNesting,
-    checkPseudos
+    identifiers.checkTagName,
+    identifiers.checkID,
+    identifiers.checkClasses,
+    attributes.checkAttr,
+    nesting.checkNesting,
+    pseudos.checkPseudos
 ]
 checkHits = function(rules, currentVDOM) {
     var res = true;
@@ -9260,6 +9270,31 @@ checkHits = function(rules, currentVDOM) {
             return false;
     }
     return true;
+}
+
+module.exports.query = function(virtualNode, selector) {
+    var parsedSelector = sparser.parse(selector),
+        selectedNodes = [],
+        nextRules = selectorUtils.getNextRules(parsedSelector);
+    //console.log(parsedSelector)
+    if (selectorUtils.hasMoreRules(parsedSelector))
+        selectorUtils.traverseVDOM(nextRules, virtualNode.children[0], selectedNodes, nextRules.nestingOperator === ">", false, null);
+    return selectedNodes;
+}
+},{"./attributes.js":66,"./identifiers.js":67,"./nesting.js":68,"./pseudos.js":69,"./selectorUtils.js":71,"css-selector-parser":28}],71:[function(require,module,exports){
+var vDOM = require('../vDOM.js');
+function hasMoreRules(rules) {
+    return typeof rules.rule !== "undefined" || typeof rules.ruleSet !== "undefined"|| typeof rules.selectors !== "undefined";
+}
+
+function getNextRules(rules) {
+    if (typeof rules.ruleSet !== "undefined")
+        return rules.ruleSet.rule;
+    if (typeof rules.selectors !== "undefined")
+        return rules.selectors.map(function(item) {
+            return item.rule
+        });
+    else return rules.rule;
 }
 
 function traverseVDOM(rules, currentVDOM, selectedNodes, exact, pseudoMode) {
@@ -9303,16 +9338,12 @@ function traverseVDOM(rules, currentVDOM, selectedNodes, exact, pseudoMode) {
     }
 }
 
-module.exports.query = function(virtualNode, selector) {
-    var parsedSelector = sparser.parse(selector),
-        selectedNodes = [],
-        nextRules = getNextRules(parsedSelector);
-    //console.log(parsedSelector)
-    if (hasMoreRules(parsedSelector))
-        traverseVDOM(nextRules, virtualNode.children[0], selectedNodes, nextRules.nestingOperator === ">", false, null);
-    return selectedNodes;
+module.exports = {
+    hasMoreRules:hasMoreRules,
+    getNextRules:getNextRules,
+    traverseVDOM:traverseVDOM
 }
-},{"./vDOM.js":68,"css-selector-parser":28}],67:[function(require,module,exports){
+},{"../vDOM.js":73}],72:[function(require,module,exports){
 var decodeEntities = (function() {
     // this prevents any overhead from creating the object each time
     var element = document.createElement('div');
@@ -9361,7 +9392,7 @@ module.exports = {
     createNode: createNode,
     isHTML: isHTML
 }
-},{}],68:[function(require,module,exports){
+},{}],73:[function(require,module,exports){
 
 //# Virtual DOM
 var HTMLParser = require('htmlparser2'),
@@ -9749,7 +9780,7 @@ module.exports = {
     }
 }
 
-},{"./utils.js":67,"clone":27,"htmlparser2":59}],69:[function(require,module,exports){
+},{"./utils.js":72,"clone":27,"htmlparser2":59}],74:[function(require,module,exports){
 var vDOM = require('./vDOM.js'),
     render = require('./render.js'),
     options = require('./options.js');
@@ -9891,4 +9922,4 @@ Object.assign(virtualQuery.prototype, {
     }
 });
 module.exports = virtualQuery;
-},{"./options.js":64,"./render.js":65,"./vDOM.js":68}]},{},[63]);
+},{"./options.js":64,"./render.js":65,"./vDOM.js":73}]},{},[63]);

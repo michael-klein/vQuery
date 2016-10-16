@@ -5,7 +5,7 @@ var isReady = false,
     utils = require('./utils.js'),
     render = require('./render.js'),
     virtualQuery = require('./virtualQuery.js'),
-    selectorEngine = require('./selectorEngine.js'),
+    selectorEngine = require('./selectorEngine/selectorEngine.js'),
     options = require('./options.js');
 
 

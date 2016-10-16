@@ -9220,14 +9220,13 @@ function traverseVDOM(rules, currentVDOM, selectedNodes, exact, pseudoMode) {
         } else
             if (!exact && currentVDOM.children.length > 0)
                 for (var i = 0; i < currentVDOM.children.length; i++)
-                    traverseVDOM(rule, currentVDOM.children[i], selectedNodes, pseudoMode);
+                    traverseVDOM(rules, currentVDOM.children[i], selectedNodes, pseudoMode);
     }
 }
 
 module.exports.query = function(virtualNode, selector) {
     var parsedSelector = sparser.parse(selector),
-        selectedNodes = [];
-        console.log(parsedSelector),
+        selectedNodes = [],
         nextRules = getNextRules(parsedSelector);
     
     if (hasMoreRules(parsedSelector))

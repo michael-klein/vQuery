@@ -26,7 +26,7 @@
                 var config = { attributes: true, childList: true, characterData: true, subtree: true};
                 observer.observe(document.body, config);
                 for (var i=0; i<10000;i++) {
-                    var $p = $('#test >div h1:has(p) p:first-child');
+                    var $p = $('#test >div h1:has(p) p:nth-child(1)');
                     
                     if (lastID)
                         $('#test >div h1:has(p) p div#' + lastID).remove();

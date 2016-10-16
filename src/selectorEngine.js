@@ -53,7 +53,9 @@ function checkPseudos(rules, node) {
         switch(pseudo.name) {
             case "first-child":
             case "last-child":
+            case "only-child":
             case "nth-child":
+            case "nth-last-child":
                 var children = node.parentNode.children;
                 if (typeof rules.tagName !== "undefined")
                     children = children.filter(function(child) {
@@ -65,7 +67,11 @@ function checkPseudos(rules, node) {
                     case "last-child":
                         return children.indexOf(node) === children.length - 1;
                     case "nth-child":
-                        return children.indexOf(node) === parseInt(pseudo.value);
+                        return children.indexOf(node) + 1 === parseInt(pseudo.value);
+                    case "nth-last-child":
+                        return children.reverse().indexOf(node) + 1 === parseInt(pseudo.value);
+                    case "only-child":
+                        return children.length === 1;
                 }
             case "has":
                 var selectedNodes = [],

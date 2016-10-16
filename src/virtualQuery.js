@@ -1,4 +1,6 @@
-var vDOM = require('./vDOM.js');
+var vDOM = require('./vDOM.js'),
+    render = require('./render.js'),
+    options = require('./options.js');
 
 function virtualQuery(array) {
   var arr = [];
@@ -127,9 +129,13 @@ Object.assign(virtualQuery.prototype, {
     },
     on: function(event, callback) {
         vDOM.on(this, event, callback);
+        if (!options.autoUpdate)
+            render.update();
     },
     off: function(event, callback) {
         vDOM.off(this, event, callback);
+        if (!options.autoUpdate)
+            render.update();
     }
 });
 module.exports = virtualQuery;

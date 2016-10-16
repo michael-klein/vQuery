@@ -8781,7 +8781,7 @@ module.exports = function (DOM1, DOM2, entry) {
     helper(DOM1, DOM2, [entry], 1);
     return ops.concat(removals);
 }
-},{"./vDOM.js":67}],63:[function(require,module,exports){
+},{"./vDOM.js":68}],63:[function(require,module,exports){
 require("./arrayFunctions.js");
 var isReady = false,
     domready = require('domready'),
@@ -8790,10 +8790,7 @@ var isReady = false,
     render = require('./render.js'),
     virtualQuery = require('./virtualQuery.js'),
     selectorEngine = require('./selectorEngine.js'),
-    options = {
-        autoUpdate: true,
-        updateInterval: 1
-    };
+    options = require('./options.js');
 
 
 
@@ -8869,7 +8866,9 @@ vQuery.getDOM = function() {
     return [vDOM.oldDOM, vDOM.newDOM];
 }
 
-},{"./arrayFunctions.js":61,"./render.js":64,"./selectorEngine.js":65,"./utils.js":66,"./vDOM.js":67,"./virtualQuery.js":68,"domready":36}],64:[function(require,module,exports){
+},{"./arrayFunctions.js":61,"./options.js":64,"./render.js":65,"./selectorEngine.js":66,"./utils.js":67,"./vDOM.js":68,"./virtualQuery.js":69,"domready":36}],64:[function(require,module,exports){
+arguments[4][1][0].apply(exports,arguments)
+},{"dup":1}],65:[function(require,module,exports){
 
 var vDOM = require('./vDOM.js'),
     utils = require('./utils.js'),
@@ -8943,7 +8942,7 @@ module.exports = {
         rendering = false;
     }
 }
-},{"./diff.js":62,"./utils.js":66,"./vDOM.js":67,"clone":27}],65:[function(require,module,exports){
+},{"./diff.js":62,"./utils.js":67,"./vDOM.js":68,"clone":27}],66:[function(require,module,exports){
 
 var CssSelectorParser = require('css-selector-parser').CssSelectorParser,
     sparser = new CssSelectorParser(),
@@ -8999,7 +8998,9 @@ function checkPseudos(rules, node) {
         switch(pseudo.name) {
             case "first-child":
             case "last-child":
+            case "only-child":
             case "nth-child":
+            case "nth-last-child":
                 var children = node.parentNode.children;
                 if (typeof rules.tagName !== "undefined")
                     children = children.filter(function(child) {
@@ -9011,7 +9012,11 @@ function checkPseudos(rules, node) {
                     case "last-child":
                         return children.indexOf(node) === children.length - 1;
                     case "nth-child":
-                        return children.indexOf(node) === parseInt(pseudo.value);
+                        return children.indexOf(node) + 1 === parseInt(pseudo.value);
+                    case "nth-last-child":
+                        return children.reverse().indexOf(node) + 1 === parseInt(pseudo.value);
+                    case "only-child":
+                        return children.length === 1;
                 }
             case "has":
                 var selectedNodes = [],
@@ -9086,7 +9091,7 @@ module.exports.query = function(virtualNode, selector) {
         traverseVDOM(getNextRules(parsedSelector), virtualNode.children[0], selectedNodes, false);
     return selectedNodes;
 }
-},{"./vDOM.js":67,"css-selector-parser":28}],66:[function(require,module,exports){
+},{"./vDOM.js":68,"css-selector-parser":28}],67:[function(require,module,exports){
 var decodeEntities = (function() {
     // this prevents any overhead from creating the object each time
     var element = document.createElement('div');
@@ -9135,7 +9140,7 @@ module.exports = {
     createNode: createNode,
     isHTML: isHTML
 }
-},{}],67:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 
 //# Virtual DOM
 var HTMLParser = require('htmlparser2'),
@@ -9523,8 +9528,10 @@ module.exports = {
     }
 }
 
-},{"./utils.js":66,"clone":27,"htmlparser2":59}],68:[function(require,module,exports){
-var vDOM = require('./vDOM.js');
+},{"./utils.js":67,"clone":27,"htmlparser2":59}],69:[function(require,module,exports){
+var vDOM = require('./vDOM.js'),
+    render = require('./render.js'),
+    options = require('./options.js');
 
 function virtualQuery(array) {
   var arr = [];
@@ -9653,10 +9660,14 @@ Object.assign(virtualQuery.prototype, {
     },
     on: function(event, callback) {
         vDOM.on(this, event, callback);
+        if (!options.autoUpdate)
+            render.update();
     },
     off: function(event, callback) {
         vDOM.off(this, event, callback);
+        if (!options.autoUpdate)
+            render.update();
     }
 });
 module.exports = virtualQuery;
-},{"./vDOM.js":67}]},{},[63]);
+},{"./options.js":64,"./render.js":65,"./vDOM.js":68}]},{},[63]);

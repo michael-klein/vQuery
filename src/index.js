@@ -6,10 +6,7 @@ var isReady = false,
     render = require('./render.js'),
     virtualQuery = require('./virtualQuery.js'),
     selectorEngine = require('./selectorEngine.js'),
-    options = {
-        autoUpdate: true,
-        updateInterval: 1
-    };
+    options = require('./options.js');
 
 
 

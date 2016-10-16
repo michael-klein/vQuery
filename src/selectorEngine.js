@@ -3,7 +3,7 @@ var CssSelectorParser = require('css-selector-parser').CssSelectorParser,
     sparser = new CssSelectorParser(),
     vDOM = require('./vDOM.js');
 
-sparser.registerSelectorPseudos('has');
+sparser.registerSelectorPseudos('has', 'not');
 sparser.registerNestingOperators('>', '+', '~');
 sparser.registerAttrEqualityMods('^', '$', '*', '~');
 sparser.enableSubstitutes();
@@ -71,9 +71,14 @@ function checkPseudos(rules, node) {
                 var selectedNodes = [],
                 nextRules = getNextRules(pseudo.value);
                 for (var i = 0; i < node.children.length; i++) {
-                    traverseVDOM(nextRules, node.children[i], selectedNodes, nextRules.nestingOperator === ">");
+                    traverseVDOM(nextRules, node.children[i], selectedNodes, nextRules.nestingOperator === ">", true);
                 }
                 return selectedNodes.length > 0;
+            case "not":
+                var selectedNodes = [],
+                nextRules = getNextRules(pseudo.value);
+                traverseVDOM(nextRules, node, selectedNodes, nextRules.nestingOperator === ">", true);
+                return selectedNodes.length === 0;
         }
     }
     return false;    
@@ -93,8 +98,8 @@ checkHits = function(rules, currentVDOM) {
     return true;
 }
 
-function traverseVDOM(rules, currentVDOM, selectedNodes, exact) {
-    if (rules.id) {
+function traverseVDOM(rules, currentVDOM, selectedNodes, exact, pseudoMode) {
+    if (rules.id && !pseudoMode) {
         var idNode = vDOM.idNodes[rules.id];
         if (typeof idNode !== "undefined" && idNode.length > 0) {
             selectedNodes.push(idNode);
@@ -105,7 +110,7 @@ function traverseVDOM(rules, currentVDOM, selectedNodes, exact) {
             else {
                 var nextRules = getNextRules(rules);
                 for (var i = 0; i < idNode.children.length; i++) {
-                    traverseVDOM(nextRules, idNode.children[i], selectedNodes, nextRules.nestingOperator === ">");
+                    traverseVDOM(nextRules, idNode.children[i], selectedNodes, nextRules.nestingOperator === ">", pseudoMode);
                 }
             }
             return;
@@ -119,13 +124,13 @@ function traverseVDOM(rules, currentVDOM, selectedNodes, exact) {
         else {
             var nextRules = getNextRules(rules);
             for (var i = 0; i < currentVDOM.children.length; i++) {
-                traverseVDOM(nextRules, currentVDOM.children[i], selectedNodes, nextRules.nestingOperator === ">");
+                traverseVDOM(nextRules, currentVDOM.children[i], selectedNodes, nextRules.nestingOperator === ">", pseudoMode);
             }
         }
     } else
         if (!exact && currentVDOM.children.length > 0) 
             for (var i=0; i < currentVDOM.children.length; i++)
-                traverseVDOM(rules, currentVDOM.children[i], selectedNodes);
+                traverseVDOM(rules, currentVDOM.children[i], selectedNodes, pseudoMode);
 }
 
 module.exports.query = function(virtualNode, selector) {
@@ -133,6 +138,6 @@ module.exports.query = function(virtualNode, selector) {
         selectedNodes = [];
         console.log(parsedSelector)
     if (hasMoreRules(parsedSelector))
-        traverseVDOM(getNextRules(parsedSelector), virtualNode.children[0], selectedNodes);
+        traverseVDOM(getNextRules(parsedSelector), virtualNode.children[0], selectedNodes, false);
     return selectedNodes;
 }

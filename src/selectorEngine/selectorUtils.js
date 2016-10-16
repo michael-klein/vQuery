@@ -1,4 +1,4 @@
-var vDOM = require('../vDOM.js');
+var vDOM = require('../vDOM/vDOM.js');
 function hasMoreRules(rules) {
     return typeof rules.rule !== "undefined" || typeof rules.ruleSet !== "undefined"|| typeof rules.selectors !== "undefined";
 }

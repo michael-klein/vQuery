@@ -1,5 +1,5 @@
 
-var vDOM = require('./vDOM.js');
+var vDOM = require('./vDOM/vDOM.js');
 
 
 /**

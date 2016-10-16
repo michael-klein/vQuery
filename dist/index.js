@@ -8707,7 +8707,7 @@ Array.prototype.unique = function () {
 };
 },{}],62:[function(require,module,exports){
 
-var vDOM = require('./vDOM.js');
+var vDOM = require('./vDOM/vDOM.js');
 
 
 /**
@@ -8915,11 +8915,11 @@ module.exports = function (DOM1, DOM2, entry) {
     helper(DOM1, DOM2, [entry], 1);
     return ops.concat(removals);
 }
-},{"./vDOM.js":73}],63:[function(require,module,exports){
+},{"./vDOM/vDOM.js":82}],63:[function(require,module,exports){
 require("./arrayFunctions.js");
 var isReady = false,
     domready = require('domready'),
-    vDOM = require('./vDOM.js'),
+    vDOM = require('./vDOM/vDOM.js'),
     utils = require('./utils.js'),
     render = require('./render.js'),
     virtualQuery = require('./virtualQuery.js'),
@@ -9000,11 +9000,11 @@ vQuery.getDOM = function() {
     return [vDOM.oldDOM, vDOM.newDOM];
 }
 
-},{"./arrayFunctions.js":61,"./options.js":64,"./render.js":65,"./selectorEngine/selectorEngine.js":70,"./utils.js":72,"./vDOM.js":73,"./virtualQuery.js":74,"domready":36}],64:[function(require,module,exports){
+},{"./arrayFunctions.js":61,"./options.js":64,"./render.js":65,"./selectorEngine/selectorEngine.js":70,"./utils.js":72,"./vDOM/vDOM.js":82,"./virtualQuery.js":84,"domready":36}],64:[function(require,module,exports){
 arguments[4][2][0].apply(exports,arguments)
 },{"dup":2}],65:[function(require,module,exports){
 
-var vDOM = require('./vDOM.js'),
+var vDOM = require('./vDOM/vDOM.js'),
     utils = require('./utils.js'),
     diff = require('./diff.js'),
     cloneObject = require("clone"),
@@ -9076,7 +9076,7 @@ module.exports = {
         rendering = false;
     }
 }
-},{"./diff.js":62,"./utils.js":72,"./vDOM.js":73,"clone":27}],66:[function(require,module,exports){
+},{"./diff.js":62,"./utils.js":72,"./vDOM/vDOM.js":82,"clone":27}],66:[function(require,module,exports){
 checkAttr = function (rules, node) {
     if (typeof rules.attrs === "undefined")
         return true;
@@ -9282,7 +9282,7 @@ module.exports.query = function(virtualNode, selector) {
     return selectedNodes;
 }
 },{"./attributes.js":66,"./identifiers.js":67,"./nesting.js":68,"./pseudos.js":69,"./selectorUtils.js":71,"css-selector-parser":28}],71:[function(require,module,exports){
-var vDOM = require('../vDOM.js');
+var vDOM = require('../vDOM/vDOM.js');
 function hasMoreRules(rules) {
     return typeof rules.rule !== "undefined" || typeof rules.ruleSet !== "undefined"|| typeof rules.selectors !== "undefined";
 }
@@ -9343,7 +9343,7 @@ module.exports = {
     getNextRules:getNextRules,
     traverseVDOM:traverseVDOM
 }
-},{"../vDOM.js":73}],72:[function(require,module,exports){
+},{"../vDOM/vDOM.js":82}],72:[function(require,module,exports){
 var decodeEntities = (function() {
     // this prevents any overhead from creating the object each time
     var element = document.createElement('div');
@@ -9393,141 +9393,8 @@ module.exports = {
     isHTML: isHTML
 }
 },{}],73:[function(require,module,exports){
-
-//# Virtual DOM
-var HTMLParser = require('htmlparser2'),
-    htmlParser = (function() {
-        var cNode,
-            init=false,
-            self,
-            parser = new HTMLParser.Parser({
-            onopentag: function (name, attribs) {
-                var node = new virtualNode(name, cNode);
-                cNode.children.push(node);
-                cNode.childNodes.push(node);
-                cNode = node;
-                for (var aName in attribs) {
-                    var value = attribs[aName];
-                    if (aName === "id")
-                        cNode.id = value;
-                    if (aName === "class")
-                        cNode.classNames = value.split(" ");
-                    cNode.attributes[aName] = value;
-                }
-            },
-            ontext: function (value) {
-                if (value.trim().length === 0) return;
-                cNode.childNodes.push(new virtualTextNode(value, cNode));
-            },
-            onclosetag: function (name) {
-                if (cNode.name === name) {
-                    if (init && cNode.id)
-                        self.idNodes[cNode.id] = cNode;
-                    cNode = cNode.parentNode;
-                }
-            }
-        }, {decodeEntities: true});
-
-        return function(html, initIn, cNodeIn, selfIn) {
-            if (typeof initIn === "undefined")
-                init = false;
-            else init = initIn;
-            self = selfIn;
-            cNode = cNodeIn;
-            parser.parseComplete(html);
-        }
-    }
-    )(),
-    utils = require('./utils.js'),
-    cloneObject = require("clone");
-
-function clone(nodes) {
-    var newNodes = [];
-    for (var i=0; i<nodes.length; i++) {
-        var clone = cloneObject(nodes[i]);
-        if (clone.hasListeners)
-            for (var event in clone.listeners) {
-                for (var i = 0; i < clone.listeners[event].length; i++) {
-                    var listener = clone.listeners[event][i];
-                    listener._isAttached = false;
-                }
-            }
-        newNodes.push(clone);
-    } 
-    newNodes.prototype = nodes.prototype;
-    return newNodes;
-}
-function setChanged(node) {
-    while (node.parentNode) {
-        node = node.parentNode;
-    }
-    node.changed = true;
-}
-function virtualNode(name, parentNode) {
-    Object.assign(this, {
-            name: name,
-            parentNode: parentNode,
-            attributes: {},
-            classNames: [],
-            path: "",
-            children: [],
-            childNodes: [],
-            id: null,
-            listeners: {},
-            hasListeners: false,
-            removeListeners: []
-    });
-};
-function virtualTextNode(value, parentNode) {
-    Object.assign(this, {
-            parentNode: parentNode,
-            value: value
-    });
-};
-function expandShorthandCSS(str) {
-    if (str.indexOf('-') > 0)
-        return str;
-    var result = str.replace(/([A-Z]+)/g, ",$1").replace(/^,/, "");
-    return result.split(",").join("-").toLowerCase();
-}
-function validateCSS(property, value) {
-    var element = document.createElement('div');
-    element.style[property] = value;
-    return element.style[property] === value;
-}
-function styleToObject(style) {
-    if (style[style.length-1] === ";")
-        style = style.slice(0,style.length-1); 
-    style = style.replace(/ /g, "").split(";");
-    var res = {};
-    for (var i=0; i<style.length; i++) {
-        var s = style[i];
-        if (s!=="") {
-            var ss = s.split(":");
-            res[ss[0]] = ss[1];
-        }
-    }
-    return res;
-}
-function objectToStyle(o) {
-    var res = [];
-    for (var i in o) {
-        res.push(i + ": " + o[i]);
-    }
-    return res.join(";");
-}
+var vDOMUtils = require('./vDOMUtils.js');
 module.exports = {
-    //### creates a virtual DOM from passed HTML
-    virtualNode: virtualNode,
-    virtualTextNode: virtualTextNode,
-    newDOM: null,
-    oldDOM: null,
-    idNodes: {},
-    createVDOM: function (html, init) {
-        cNode = new virtualNode("root", null);
-        htmlParser(html.replace(/\r?\n|\r/g, ""), init, cNode, this);
-        return cNode;
-    },
     //creates a new vitual node from passed html and appends it to all virtual nodes
     addChildFromHtml: function(nodes, html, position) {
         var self = this;
@@ -9570,7 +9437,7 @@ module.exports = {
                     }
                 break;
         }
-        setChanged(nodes[0]);
+        vDOMUtils.setChanged(nodes[0]);
     },
     addChildFromVNodes: function(nodes, vNodes, position) {
         this.removeNodes(vNodes, true);
@@ -9580,7 +9447,7 @@ module.exports = {
             case "string":
                     if (position === "start") {
                         for (var i=0; i<nodes.length; i++) {
-                            var newDOM = clone(vNodes);
+                            var newDOM = vDOMUtils.clone(vNodes);
                             clones = clones.concat(newDOM);
                             nodes[i].children = newDOM.concat(nodes[i].children);
                             nodes[i].childNodes = newDOM.concat(nodes[i].childNodes);
@@ -9592,7 +9459,7 @@ module.exports = {
                         }
                     } if (position === "end") {
                         for (var i=0; i<nodes.length; i++) {
-                            var newDOM = clone(vNodes);
+                            var newDOM = vDOMUtils.clone(vNodes);
                             clones = clones.concat(newDOM);
                             nodes[i].children = nodes[i].children.concat(newDOM);
                             nodes[i].childNodes = nodes[i].childNodes.concat(newDOM);
@@ -9608,7 +9475,7 @@ module.exports = {
                     for (var i=0; i<nodes.length; i++) {
                         var newDOM = this.createVDOM(html);
                         for (var j=0; j<newDOM.children.length; j++) {
-                            var newDOM = clone(vNodes);
+                            var newDOM = vDOMUtils.clone(vNodes);
                             clones = clones.concat(newDOM);
                             nodes[i].childNodes.splice(position, nodes[i].childNodes.indexOf(nodes[i].children[position]), newDOM);
                             nodes[i].children.splice(position, 0, newDOM);
@@ -9621,22 +9488,32 @@ module.exports = {
                     }
                 break;
         }
-        setChanged(nodes[0]);
+        vDOMUtils.setChanged(nodes[0]);
         return clones;
+    }
+}
+},{"./vDOMUtils.js":83}],74:[function(require,module,exports){
+var vDOMUtils = require('./vDOMUtils.js');
+module.exports = {
+    //Get the value of an attribute for the first element in the set of matched elements
+    getAttribute(nodes, attribute) {
+        var node = nodes[0];
+        if (typeof node.attributes[attribute.toLowerCase()] !== "undefined")
+            return node.attributes[attribute.toLowerCase()];
+        return undefined;
     },
-    //removes a virtual node from its parent
-    removeNodes: function(nodes, ignoreSetChanged) {
+    //Set the value of an attribute for each element
+    setAttribute(nodes, attribute, value) {
         for (var i=0; i<nodes.length; i++) {
             var node = nodes[i];
-            if (!node.parentNode) continue;
-            if (node.id)
-                delete this.idNodes[node.id];
-            node.parentNode.children.splice(node.parentNode.children.indexOf(node),1);
-            node.parentNode.childNodes.splice(node.parentNode.childNodes.indexOf(node),1);
+            node.attributes[attribute.toLowerCase()] = value;
         }
-        if (ignoreSetChanged) return;
-        setChanged(nodes[0]);
-    },
+        vDOMUtils.setChanged(nodes[0]);
+    }
+}
+},{"./vDOMUtils.js":83}],75:[function(require,module,exports){
+var vDOMUtils = require('./vDOMUtils.js');
+module.exports = {
     //checks all nodes if they have the supplied classes
     hasClass: function(nodes, classIn) {
         for (var i=0; i<nodes.length; i++) {
@@ -9660,7 +9537,7 @@ module.exports = {
                 }
             node.attributes.class = node.classNames.join(' ');
         }
-        setChanged(nodes[0]);
+        vDOMUtils.setChanged(nodes[0]);
     },
     //adds classs to all virtual nodes
     addClasses: function(nodes, classes) {
@@ -9675,8 +9552,106 @@ module.exports = {
                 }
             node.attributes.class = node.classNames.join(' ');
         }
-        setChanged(nodes[0]);
+        vDOMUtils.setChanged(nodes[0]);
+    }
+}
+},{"./vDOMUtils.js":83}],76:[function(require,module,exports){
+var nodeTypes = require('./nodeTypes.js'),
+    vDOMUtils = require('./vDOMUtils.js'),
+    HTMLParser = require('htmlparser2'),
+    htmlParser = (function() {
+        var cNode,
+            init=false,
+            self,
+            parser = new HTMLParser.Parser({
+            onopentag: function (name, attribs) {
+                var node = new nodeTypes.virtualNode(name, cNode);
+                cNode.children.push(node);
+                cNode.childNodes.push(node);
+                cNode = node;
+                for (var aName in attribs) {
+                    var value = attribs[aName];
+                    if (aName === "id")
+                        cNode.id = value;
+                    if (aName === "class")
+                        cNode.classNames = value.split(" ");
+                    cNode.attributes[aName] = value;
+                }
+            },
+            ontext: function (value) {
+                if (value.trim().length === 0) return;
+                cNode.childNodes.push(new nodeTypes.virtualTextNode(value, cNode));
+            },
+            onclosetag: function (name) {
+                if (cNode.name === name) {
+                    if (init && cNode.id)
+                        self.idNodes[cNode.id] = cNode;
+                    cNode = cNode.parentNode;
+                }
+            }
+        }, {decodeEntities: true});
+
+        return function(html, initIn, cNodeIn, selfIn) {
+            if (typeof initIn === "undefined")
+                init = false;
+            else init = initIn;
+            self = selfIn;
+            cNode = cNodeIn;
+            parser.parseComplete(html);
+        }
+    }
+    )();
+
+module.exports = {
+    idNodes: {},
+    createVDOM: function (html, init) {
+        cNode = new nodeTypes.virtualNode("root", null);
+        htmlParser(html.replace(/\r?\n|\r/g, ""), init, cNode, this);
+        return cNode;
+    }
+}
+
+},{"./nodeTypes.js":79,"./vDOMUtils.js":83,"htmlparser2":59}],77:[function(require,module,exports){
+var vDOMUtils = require('./vDOMUtils.js');
+module.exports = {
+    on: function(nodes, event, callback) {
+        for (var i=0; i<nodes.length; i++) {
+            var node = nodes[i];
+            var listener = (function(node, callback) {
+                var newListener = function (event) {
+                    callback.call(node, event);
+                }
+                newListener._originalCallback = callback;
+                newListener._detach = false;
+                newListener._isAttached = false;
+                return newListener
+            })(node, callback);
+            if (typeof node.listeners[event] === "undefined")
+                node.listeners[event] = [listener];
+            else
+                node.listeners[event].push(listener);
+            node.hasListeners = true;
+        }
+        vDOMUtils.setChanged(nodes[0]);
     },
+    off: function(nodes, event, callback) {
+        for (var i=0; i<nodes.length; i++) {
+            var node = nodes[i];
+            if (typeof node.listeners[event] !== "undefined")
+                for (var i=0; i<node.listeners[event].length; i++) {
+                    var listener = node.listeners[event][i];
+                    if (listener._originalCallback === callback && listener._isAttached)
+                        listener._detach = true;
+                }
+            node.hasListeners = true;
+        }
+        vDOMUtils.setChanged(nodes[0]);
+    }
+}
+},{"./vDOMUtils.js":83}],78:[function(require,module,exports){
+var utils = require('../utils.js'),
+    vDOMUtils = require('./vDOMUtils.js');
+module.exports = {
     //generated virtual DOM from passed html and replaces the children of the passed nodes with it
     setHTML: function(nodes, html) {
         var self = this;
@@ -9699,89 +9674,169 @@ module.exports = {
             addHelper(node.children);
             node.childNodes = this.createVDOM(html).childNodes;    
         }
-        setChanged(nodes[0]);
+        vDOMUtils.setChanged(nodes[0]);
     },
     //return innerHTML for a node
     getHTML: function(nodes, html) {
         return utils.createNode(nodes[0], this).innerHTML;
+    }
+}
+},{"../utils.js":72,"./vDOMUtils.js":83}],79:[function(require,module,exports){
+module.exports = {
+    virtualNode: function (name, parentNode) {
+        Object.assign(this, {
+            name: name,
+            parentNode: parentNode,
+            attributes: {},
+            classNames: [],
+            path: "",
+            children: [],
+            childNodes: [],
+            id: null,
+            listeners: {},
+            hasListeners: false,
+            removeListeners: []
+        });
     },
-    //Get the value of an attribute for the first element in the set of matched elements
-    getAttribute(nodes, attribute) {
-        var node = nodes[0];
-        if (typeof node.attributes[attribute.toLowerCase()] !== "undefined")
-            return node.attributes[attribute.toLowerCase()];
-        return undefined;
-    },
-    //Set the value of an attribute for each element
-    setAttribute(nodes, attribute, value) {
+    virtualTextNode: function (value, parentNode) {
+        Object.assign(this, {
+            parentNode: parentNode,
+            value: value
+        });
+    }
+}
+},{}],80:[function(require,module,exports){
+var vDOMUtils = require('./vDOMUtils.js');
+module.exports = {
+    //removes a virtual node from its parent
+    removeNodes: function(nodes, ignoreSetChanged) {
         for (var i=0; i<nodes.length; i++) {
             var node = nodes[i];
-            node.attributes[attribute.toLowerCase()] = value;
+            if (!node.parentNode) continue;
+            if (node.id)
+                delete this.idNodes[node.id];
+            node.parentNode.children.splice(node.parentNode.children.indexOf(node),1);
+            node.parentNode.childNodes.splice(node.parentNode.childNodes.indexOf(node),1);
         }
-        setChanged(nodes[0]);
-    },
+        if (ignoreSetChanged) return;
+        vDOMUtils.setChanged(nodes[0]);
+    }
+}
+},{"./vDOMUtils.js":83}],81:[function(require,module,exports){
+var vDOMUtils = require('./vDOMUtils.js');
+
+module.exports = {
     //Set the value of a style for each element
     setStyle(nodes, property, value) {
-        property = expandShorthandCSS(property);
-        if (validateCSS(property, value)) {
+        property = vDOMUtils.expandShorthandCSS(property);
+        if (vDOMUtils.validateCSS(property, value)) {
             for (var i=0; i<nodes.length; i++) {
                 var node = nodes[i];
                 if (typeof node.attributes.style === "undefined")
                     node.attributes.style = "";
-                var styles = styleToObject(node.attributes.style);  
+                var styles = vDOMUtils.styleToObject(node.attributes.style);  
                 styles[property] = value;
-                node.attributes.style = objectToStyle(styles);
+                node.attributes.style = vDOMUtils.objectToStyle(styles);
             }
-            setChanged(nodes[0]);
+            vDOMUtils.setChanged(nodes[0]);
         }
     },
     //get the value of a style for the first element
     getStyle(nodes, property) {
-        property = expandShorthandCSS(property);
+        property = vDOMUtils.expandShorthandCSS(property);
         var node = nodes[0],
-            styles = styleToObject(node.attributes.style);
+            styles = vDOMUtils.styleToObject(node.attributes.style);
         return styles[property];
-    },
-    clone: function(node) {
-        return clone(node);
-    },
-    on: function(nodes, event, callback) {
-        for (var i=0; i<nodes.length; i++) {
-            var node = nodes[i];
-            var listener = (function(node, callback) {
-                var newListener = function (event) {
-                    callback.call(node, event);
-                }
-                newListener._originalCallback = callback;
-                newListener._detach = false;
-                newListener._isAttached = false;
-                return newListener
-            })(node, callback);
-            if (typeof node.listeners[event] === "undefined")
-                node.listeners[event] = [listener];
-            else
-                node.listeners[event].push(listener);
-            node.hasListeners = true;
-        }
-        setChanged(nodes[0]);
-    },
-    off: function(nodes, event, callback) {
-        for (var i=0; i<nodes.length; i++) {
-            var node = nodes[i];
-            if (typeof node.listeners[event] !== "undefined")
-                for (var i=0; i<node.listeners[event].length; i++) {
-                    var listener = node.listeners[event][i];
-                    if (listener._originalCallback === callback && listener._isAttached)
-                        listener._detach = true;
-                }
-            node.hasListeners = true;
-        }
-        setChanged(nodes[0]);
     }
 }
+},{"./vDOMUtils.js":83}],82:[function(require,module,exports){
+//# Virtual DOM
+var vDOMUtils = require('./vDOMUtils.js');
 
-},{"./utils.js":72,"clone":27,"htmlparser2":59}],74:[function(require,module,exports){
-var vDOM = require('./vDOM.js'),
+
+module.exports = Object.assign({
+    newDOM: null,
+    oldDOM: null,
+    clone: function(node) {
+        return vDOMUtils.clone(node);
+    }
+}, 
+require('./nodeTypes.js'),
+require('./createVDOM.js'),
+require('./events.js'),
+require('./class.js'),
+require('./addChild.js'),
+require('./removeChild.js'),
+require('./html.js'),
+require('./styles.js'),
+require('./attributes.js'));
+
+},{"./addChild.js":73,"./attributes.js":74,"./class.js":75,"./createVDOM.js":76,"./events.js":77,"./html.js":78,"./nodeTypes.js":79,"./removeChild.js":80,"./styles.js":81,"./vDOMUtils.js":83}],83:[function(require,module,exports){
+var cloneObject = require("clone");
+function clone(nodes) {
+    var newNodes = [];
+    for (var i=0; i<nodes.length; i++) {
+        var clone = cloneObject(nodes[i]);
+        if (clone.hasListeners)
+            for (var event in clone.listeners) {
+                for (var i = 0; i < clone.listeners[event].length; i++) {
+                    var listener = clone.listeners[event][i];
+                    listener._isAttached = false;
+                }
+            }
+        newNodes.push(clone);
+    } 
+    newNodes.prototype = nodes.prototype;
+    return newNodes;
+}
+function setChanged(node) {
+    while (node.parentNode) {
+        node = node.parentNode;
+    }
+    node.changed = true;
+}
+function expandShorthandCSS(str) {
+    if (str.indexOf('-') > 0)
+        return str;
+    var result = str.replace(/([A-Z]+)/g, ",$1").replace(/^,/, "");
+    return result.split(",").join("-").toLowerCase();
+}
+function validateCSS(property, value) {
+    var element = document.createElement('div');
+    element.style[property] = value;
+    return element.style[property] === value;
+}
+function styleToObject(style) {
+    if (style[style.length-1] === ";")
+        style = style.slice(0,style.length-1); 
+    style = style.replace(/ /g, "").split(";");
+    var res = {};
+    for (var i=0; i<style.length; i++) {
+        var s = style[i];
+        if (s!=="") {
+            var ss = s.split(":");
+            res[ss[0]] = ss[1];
+        }
+    }
+    return res;
+}
+function objectToStyle(o) {
+    var res = [];
+    for (var i in o) {
+        res.push(i + ": " + o[i]);
+    }
+    return res.join(";");
+}
+module.exports = {
+    clone: clone,
+    setChanged: setChanged,
+    expandShorthandCSS: expandShorthandCSS,
+    validateCSS: validateCSS,
+    styleToObject: styleToObject,
+    objectToStyle: objectToStyle
+}
+},{"clone":27}],84:[function(require,module,exports){
+var vDOM = require('./vDOM/vDOM.js'),
     render = require('./render.js'),
     options = require('./options.js');
 
@@ -9922,4 +9977,4 @@ Object.assign(virtualQuery.prototype, {
     }
 });
 module.exports = virtualQuery;
-},{"./options.js":64,"./render.js":65,"./vDOM.js":73}]},{},[63]);
+},{"./options.js":64,"./render.js":65,"./vDOM/vDOM.js":82}]},{},[63]);

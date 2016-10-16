@@ -1,4 +1,4 @@
-var vDOM = require('./vDOM.js'),
+var vDOM = require('./vDOM/vDOM.js'),
     render = require('./render.js'),
     options = require('./options.js');
 

@@ -1,5 +1,5 @@
 
-var vDOM = require('./vDOM.js'),
+var vDOM = require('./vDOM/vDOM.js'),
     utils = require('./utils.js'),
     diff = require('./diff.js'),
     cloneObject = require("clone"),

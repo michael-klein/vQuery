@@ -1,7 +1,7 @@
 require("./arrayFunctions.js");
 var isReady = false,
     domready = require('domready'),
-    vDOM = require('./vDOM.js'),
+    vDOM = require('./vDOM/vDOM.js'),
     utils = require('./utils.js'),
     render = require('./render.js'),
     virtualQuery = require('./virtualQuery.js'),

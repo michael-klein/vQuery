@@ -9174,10 +9174,10 @@ function checkPseudos(rules, node) {
 }
 
 function checkNesting(rules, node) {
-    if (typeof rules.nestingOperator === "undefined" || rules.nestingOperator === ">")
+    if (typeof rules.nestingOperator === "undefined" || !rules.nestingOperator || rules.nestingOperator === ">")
         return true;
     var nextRules = getNextRules(rules);
-    if (typeof nextRules !== "undefined" && typeof nextRules.nestingOperator !== "undefined") {
+    if (typeof nextRules !== "undefined" && typeof nextRules.nestingOperator !== "undefined" && nextRules.nestingOperator) {
         return true;
     }
     var prevSibling = node;

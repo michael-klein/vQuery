@@ -9,13 +9,17 @@ sparser.registerAttrEqualityMods('^', '$', '*', '~');
 sparser.enableSubstitutes();
 
 function hasMoreRules(rules) {
-    return typeof rules.rule !== "undefined" || typeof rules.ruleSet !== "undefined";
+    return typeof rules.rule !== "undefined" || typeof rules.ruleSet !== "undefined"|| typeof rules.selectors !== "undefined";
 }
 
 function getNextRules(rules) {
     if (typeof rules.ruleSet !== "undefined")
-        return rules.ruleSet;
-    else  return rules.rule;
+        return [rules.ruleSet];
+    if (typeof rules.selectors !== "undefined")
+        return rules.selectors.map(function(item) {
+            return item.rule
+        });
+    else return [rules.rule];
 };
 
 function checkClasses(rules, node) {
@@ -105,44 +109,49 @@ checkHits = function(rules, currentVDOM) {
 }
 
 function traverseVDOM(rules, currentVDOM, selectedNodes, exact, pseudoMode) {
-    if (rules.id && !pseudoMode) {
-        var idNode = vDOM.idNodes[rules.id];
-        if (typeof idNode !== "undefined" && idNode.length > 0) {
-            selectedNodes.push(idNode);
-            if (!hasMoreRules(rules)) {
-                if (selectedNodes.indexOf(idNode) === -1)
-                    selectedNodes.push(idNode);
+    for (var r=0; r<rules.length; r++) {
+        var rule = rules[r];
+        if (rule.id && !pseudoMode) {
+            var idNode = vDOM.idNodes[rule.id];
+            if (typeof idNode !== "undefined" && idNode.length !== []) {
+                if (!hasMoreRules(rule)) {
+                    if (selectedNodes.indexOf(idNode) === -1)
+                        selectedNodes.push(idNode);
+                }
+                else {
+                    var nextRules = getNextRules(rule);
+                    for (var i = 0; i < idNode.children.length; i++) {
+                        traverseVDOM(nextRules, idNode.children[i], selectedNodes, nextRules.nestingOperator === ">", pseudoMode);
+                    }
+                }
+                continue;
+            }
+        }
+        if (checkHits(rule, currentVDOM)) {
+            if (!hasMoreRules(rule)) {
+                if (selectedNodes.indexOf(currentVDOM) === -1)
+                    selectedNodes.push(currentVDOM);
             }
             else {
-                var nextRules = getNextRules(rules);
-                for (var i = 0; i < idNode.children.length; i++) {
-                    traverseVDOM(nextRules, idNode.children[i], selectedNodes, nextRules.nestingOperator === ">", pseudoMode);
+                var nextRules = getNextRules(rule);
+                for (var i = 0; i < currentVDOM.children.length; i++) {
+                    traverseVDOM(nextRules, currentVDOM.children[i], selectedNodes, nextRules.nestingOperator === ">", pseudoMode);
                 }
             }
-            return;
-        }
+        } else
+            if (!exact && currentVDOM.children.length > 0)
+                for (var i = 0; i < currentVDOM.children.length; i++)
+                    traverseVDOM(rule, currentVDOM.children[i], selectedNodes, pseudoMode);
     }
-    if (checkHits(rules, currentVDOM)) {
-        if (!hasMoreRules(rules)) {
-            if (selectedNodes.indexOf(currentVDOM) === -1)
-                selectedNodes.push(currentVDOM);
-        }
-        else {
-            var nextRules = getNextRules(rules);
-            for (var i = 0; i < currentVDOM.children.length; i++) {
-                traverseVDOM(nextRules, currentVDOM.children[i], selectedNodes, nextRules.nestingOperator === ">", pseudoMode);
-            }
-        }
-    } else
-        if (!exact && currentVDOM.children.length > 0) 
-            for (var i=0; i < currentVDOM.children.length; i++)
-                traverseVDOM(rules, currentVDOM.children[i], selectedNodes, pseudoMode);
 }
 
 module.exports.query = function(virtualNode, selector) {
     var parsedSelector = sparser.parse(selector),
         selectedNodes = [];
+        console.log(parsedSelector),
+        nextRules = getNextRules(parsedSelector);
+    
     if (hasMoreRules(parsedSelector))
-        traverseVDOM(getNextRules(parsedSelector), virtualNode.children[0], selectedNodes, false);
+        traverseVDOM(nextRules, virtualNode.children[0], selectedNodes, nextRules.nestingOperator === ">", false);
     return selectedNodes;
 }

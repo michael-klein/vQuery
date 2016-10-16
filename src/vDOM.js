@@ -26,9 +26,9 @@ var HTMLParser = require('htmlparser2'),
             },
             onclosetag: function (name) {
                 if (cNode.name === name) {
-                    cNode = cNode.parentNode;
                     if (init && cNode.id)
                         self.idNodes[cNode.id] = cNode;
+                    cNode = cNode.parentNode;
                 }
             }
         }, {decodeEntities: true});

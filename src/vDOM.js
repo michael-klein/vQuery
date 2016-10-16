@@ -45,7 +45,6 @@ var HTMLParser = require('htmlparser2'),
     )(),
     utils = require('./utils.js'),
     cloneObject = require("clone");
-//## sets the root node to "changed"
 
 function clone(nodes) {
     var newNodes = [];

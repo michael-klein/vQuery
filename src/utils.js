@@ -32,7 +32,17 @@ function createNode(data, vDOM) {
         return document.createTextNode(decodeEntities(data.value));
     return node;
 }
+var rquickExpr = /^(?:\s*(<[\w\W]+>)[^>]*|#([\w-]+))$/;
+function isHTML(str) {
+    if (str[0] === "<" && str[str.length - 1] === ">" && str.length >= 3) {
+            return true;
+    } else {
+        var match = rquickExpr.exec(str);
+        return match !== null && match[1];
+    }
+}
 module.exports = {
     decodeEntities: decodeEntities,
-    createNode: createNode
+    createNode: createNode,
+    isHTML: isHTML
 }

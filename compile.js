@@ -8,5 +8,4 @@ function execute(command) {
         }
     });
 };
-execute("browserify src/test.js -o dist/test.js");
 execute("browserify src/index.js -o dist/index.js");

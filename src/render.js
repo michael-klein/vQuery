@@ -1,6 +1,8 @@
 
 var vDOM = require('./vDOM.js'),
     utils = require('./utils.js'),
+    diff = require('./diff.js'),
+    cloneObject = require("clone"),
     rendering = false;
 
 function handleListeners(domNode, listeners) {
@@ -19,6 +21,16 @@ function handleListeners(domNode, listeners) {
 module.exports = {
     isRendering: function() {
         return rendering;
+    },
+    afterRenderCallbacks: [],
+    update: function() {
+        var d = diff(vDOM.oldDOM, vDOM.newDOM, "html");
+        if (d.length > 0)
+            this.render(d, document.querySelector("html"));
+        for (var i = 0; i < this.afterRenderCallbacks.length; i++)
+            this.afterRenderCallbacks[i]();
+        vDOM.oldDOM = cloneObject(vDOM.newDOM);
+        vDOM.newDOM.changed = false;
     },
     render: function(ops,node) {
         var t = new Date().getTime();

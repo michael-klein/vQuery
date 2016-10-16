@@ -1,25 +1,17 @@
-
+require("./arrayFunctions.js");
 var isReady = false,
     domready = require('domready'),
     vDOM = require('./vDOM.js'),
-    diff = require('./diff.js'),
+    utils = require('./utils.js'),
     render = require('./render.js'),
     virtualQuery = require('./virtualQuery.js'),
     selectorEngine = require('./selectorEngine.js'),
-    cloneObject = require("clone"),
-    rquickExpr = /^(?:\s*(<[\w\W]+>)[^>]*|#([\w-]+))$/,
-    afterRenderCallbacks = [];
+    options = {
+        autoUpdate: true,
+        updateInterval: 1
+    };
 
 
-function isHTML(str) {
-    //taken from the jQuery source: https://github.com/jquery/jquery/blob/master/src/core/init.js
-    if (str[0] === "<" && str[str.length - 1] === ">" && str.length >= 3) {
-            return true;
-    } else {
-        var match = rquickExpr.exec(str);
-        return match !== null && match[1];
-    }
-}
 
 function prepareDOMs() {
     if (!vDOM.oldDOM) {
@@ -36,37 +28,35 @@ domready(function () {
 function renderTimer() {
     if (vDOM.newDOM.changed) {
         window.requestAnimationFrame(function() {
-            var d = diff(vDOM.oldDOM, vDOM.newDOM, "html");
-            if (d.length > 0)
-                render.render(d, document.querySelector("html"));
-            for (var i=0; i<afterRenderCallbacks.length; i++)
-                afterRenderCallbacks[i]();
-            vDOM.oldDOM = cloneObject(vDOM.newDOM);
-            vDOM.newDOM.changed = false;
+            render.update();
             window.setTimeout(renderTimer, 1);
         });
     } else 
         window.setTimeout(renderTimer,1);
 }
 
-vQuery = function(arg) {
+function ready(cb) {
+    prepareDOMs();
+    if (options.autoUpdate)
+        window.setTimeout(renderTimer, options.updateInterval);
+    cb();
+}
+vQuery = function(arg, optionsIn) {
     switch (typeof arg) {
         case "function":
+            if (typeof optionsIn === "object")
+                options = Object.assign(options, optionsIn);
             if (isReady) {
-                prepareDOMs();
-                window.setTimeout(renderTimer,1);
-                arg();
+                ready(arg);
             }
             else
-                domready(function() {                    
-                    prepareDOMs();
-                    window.setTimeout(renderTimer,1);
-                    arg();
+                domready(function() {     
+                    ready(arg);
                 });
             break;
         case "string":
             prepareDOMs();
-            if (isHTML(arg)) {
+            if (utils.isHTML(arg)) {
                 return new virtualQuery(vDOM.createVDOM(arg, true).children);
             } else {
                 var nodes = selectorEngine.query(vDOM.newDOM,arg);
@@ -83,8 +73,13 @@ vQuery = function(arg) {
 }
 
 vQuery.afterRender = function(cb) {
-    afterRenderCallbacks.push(cb);
+    render.afterRenderCallbacks.push(cb);
 };
+
+vQuery.update = function () {
+    render.update();
+    return this;
+}
 
 vQuery.getDOM = function() {
     return [vDOM.oldDOM, vDOM.newDOM];

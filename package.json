@@ -12,15 +12,6 @@
     "clone": "^2.0.0",
     "css-selector-parser": "^1.1.0",
     "domready": "^1.0.8",
-    "html-parser": "^0.10.0",
-    "htmlparser2": "^3.9.1",
-    "is-html": "^1.0.0",
-    "strictify": "^0.2.0"
-  },
-  "devDependencies": {
-    "highlight.js": "^9.6.0",
-    "markdown-html": "0.0.8",
-    "markdown-to-html": "0.0.11",
-    "marked": "^0.3.6"
+    "htmlparser2": "^3.9.1"
   }
 }

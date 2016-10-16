@@ -8531,10 +8531,8 @@ module.exports = {
 },{"./CollectingHandler.js":52,"./FeedHandler.js":53,"./Parser.js":54,"./ProxyHandler.js":55,"./Stream.js":56,"./Tokenizer.js":57,"./WritableStream.js":58,"domelementtype":32,"domhandler":33,"domutils":37}],60:[function(require,module,exports){
 arguments[4][7][0].apply(exports,arguments)
 },{"dup":7}],61:[function(require,module,exports){
-
-var vDOM = require('./vDOM.js');
 if (!Array.prototype.filter) {
-    Array.prototype.filter = function (fun/*, thisArg*/) {
+    Array.prototype.filter = function (fun) {
         'use strict';
 
         if (this === void 0 || this === null) {
@@ -8552,12 +8550,6 @@ if (!Array.prototype.filter) {
         for (var i = 0; i < len; i++) {
             if (i in t) {
                 var val = t[i];
-
-                // NOTE: Technically this should Object.defineProperty at
-                //       the next index, as push can be affected by
-                //       properties on Object.prototype and Array.prototype.
-                //       But that method's new, and collisions should be
-                //       rare, so use the more-compatible alternative.
                 if (fun.call(thisArg, val, i, t)) {
                     res.push(val);
                 }
@@ -8579,6 +8571,10 @@ Array.prototype.unique = function () {
         return x
     })
 };
+},{}],62:[function(require,module,exports){
+
+var vDOM = require('./vDOM.js');
+
 
 /**
  * Returns the CSS patch to a given DOM node.
@@ -8785,29 +8781,21 @@ module.exports = function (DOM1, DOM2, entry) {
     helper(DOM1, DOM2, [entry], 1);
     return ops.concat(removals);
 }
-},{"./vDOM.js":66}],62:[function(require,module,exports){
-
+},{"./vDOM.js":67}],63:[function(require,module,exports){
+require("./arrayFunctions.js");
 var isReady = false,
     domready = require('domready'),
     vDOM = require('./vDOM.js'),
-    diff = require('./diff.js'),
+    utils = require('./utils.js'),
     render = require('./render.js'),
     virtualQuery = require('./virtualQuery.js'),
     selectorEngine = require('./selectorEngine.js'),
-    cloneObject = require("clone"),
-    rquickExpr = /^(?:\s*(<[\w\W]+>)[^>]*|#([\w-]+))$/,
-    afterRenderCallbacks = [];
+    options = {
+        autoUpdate: true,
+        updateInterval: 1
+    };
 
 
-function isHTML(str) {
-    //taken from the jQuery source: https://github.com/jquery/jquery/blob/master/src/core/init.js
-    if (str[0] === "<" && str[str.length - 1] === ">" && str.length >= 3) {
-            return true;
-    } else {
-        var match = rquickExpr.exec(str);
-        return match !== null && match[1];
-    }
-}
 
 function prepareDOMs() {
     if (!vDOM.oldDOM) {
@@ -8824,37 +8812,35 @@ domready(function () {
 function renderTimer() {
     if (vDOM.newDOM.changed) {
         window.requestAnimationFrame(function() {
-            var d = diff(vDOM.oldDOM, vDOM.newDOM, "html");
-            if (d.length > 0)
-                render.render(d, document.querySelector("html"));
-            for (var i=0; i<afterRenderCallbacks.length; i++)
-                afterRenderCallbacks[i]();
-            vDOM.oldDOM = cloneObject(vDOM.newDOM);
-            vDOM.newDOM.changed = false;
+            render.update();
             window.setTimeout(renderTimer, 1);
         });
     } else 
         window.setTimeout(renderTimer,1);
 }
 
-vQuery = function(arg) {
+function ready(cb) {
+    prepareDOMs();
+    if (options.autoUpdate)
+        window.setTimeout(renderTimer, options.updateInterval);
+    cb();
+}
+vQuery = function(arg, optionsIn) {
     switch (typeof arg) {
         case "function":
+            if (typeof optionsIn === "object")
+                options = Object.assign(options, optionsIn);
             if (isReady) {
-                prepareDOMs();
-                window.setTimeout(renderTimer,1);
-                arg();
+                ready(arg);
             }
             else
-                domready(function() {                    
-                    prepareDOMs();
-                    window.setTimeout(renderTimer,1);
-                    arg();
+                domready(function() {     
+                    ready(arg);
                 });
             break;
         case "string":
             prepareDOMs();
-            if (isHTML(arg)) {
+            if (utils.isHTML(arg)) {
                 return new virtualQuery(vDOM.createVDOM(arg, true).children);
             } else {
                 var nodes = selectorEngine.query(vDOM.newDOM,arg);
@@ -8871,17 +8857,24 @@ vQuery = function(arg) {
 }
 
 vQuery.afterRender = function(cb) {
-    afterRenderCallbacks.push(cb);
+    render.afterRenderCallbacks.push(cb);
 };
+
+vQuery.update = function () {
+    render.update();
+    return this;
+}
 
 vQuery.getDOM = function() {
     return [vDOM.oldDOM, vDOM.newDOM];
 }
 
-},{"./diff.js":61,"./render.js":63,"./selectorEngine.js":64,"./vDOM.js":66,"./virtualQuery.js":67,"clone":27,"domready":36}],63:[function(require,module,exports){
+},{"./arrayFunctions.js":61,"./render.js":64,"./selectorEngine.js":65,"./utils.js":66,"./vDOM.js":67,"./virtualQuery.js":68,"domready":36}],64:[function(require,module,exports){
 
 var vDOM = require('./vDOM.js'),
     utils = require('./utils.js'),
+    diff = require('./diff.js'),
+    cloneObject = require("clone"),
     rendering = false;
 
 function handleListeners(domNode, listeners) {
@@ -8900,6 +8893,16 @@ function handleListeners(domNode, listeners) {
 module.exports = {
     isRendering: function() {
         return rendering;
+    },
+    afterRenderCallbacks: [],
+    update: function() {
+        var d = diff(vDOM.oldDOM, vDOM.newDOM, "html");
+        if (d.length > 0)
+            this.render(d, document.querySelector("html"));
+        for (var i = 0; i < this.afterRenderCallbacks.length; i++)
+            this.afterRenderCallbacks[i]();
+        vDOM.oldDOM = cloneObject(vDOM.newDOM);
+        vDOM.newDOM.changed = false;
     },
     render: function(ops,node) {
         var t = new Date().getTime();
@@ -8940,7 +8943,7 @@ module.exports = {
         rendering = false;
     }
 }
-},{"./utils.js":65,"./vDOM.js":66}],64:[function(require,module,exports){
+},{"./diff.js":62,"./utils.js":66,"./vDOM.js":67,"clone":27}],65:[function(require,module,exports){
 
 var CssSelectorParser = require('css-selector-parser').CssSelectorParser,
     sparser = new CssSelectorParser(),
@@ -9083,7 +9086,7 @@ module.exports.query = function(virtualNode, selector) {
         traverseVDOM(getNextRules(parsedSelector), virtualNode.children[0], selectedNodes, false);
     return selectedNodes;
 }
-},{"./vDOM.js":66,"css-selector-parser":28}],65:[function(require,module,exports){
+},{"./vDOM.js":67,"css-selector-parser":28}],66:[function(require,module,exports){
 var decodeEntities = (function() {
     // this prevents any overhead from creating the object each time
     var element = document.createElement('div');
@@ -9118,11 +9121,21 @@ function createNode(data, vDOM) {
         return document.createTextNode(decodeEntities(data.value));
     return node;
 }
+var rquickExpr = /^(?:\s*(<[\w\W]+>)[^>]*|#([\w-]+))$/;
+function isHTML(str) {
+    if (str[0] === "<" && str[str.length - 1] === ">" && str.length >= 3) {
+            return true;
+    } else {
+        var match = rquickExpr.exec(str);
+        return match !== null && match[1];
+    }
+}
 module.exports = {
     decodeEntities: decodeEntities,
-    createNode: createNode
+    createNode: createNode,
+    isHTML: isHTML
 }
-},{}],66:[function(require,module,exports){
+},{}],67:[function(require,module,exports){
 
 //# Virtual DOM
 var HTMLParser = require('htmlparser2'),
@@ -9170,7 +9183,6 @@ var HTMLParser = require('htmlparser2'),
     )(),
     utils = require('./utils.js'),
     cloneObject = require("clone");
-//## sets the root node to "changed"
 
 function clone(nodes) {
     var newNodes = [];
@@ -9511,7 +9523,7 @@ module.exports = {
     }
 }
 
-},{"./utils.js":65,"clone":27,"htmlparser2":59}],67:[function(require,module,exports){
+},{"./utils.js":66,"clone":27,"htmlparser2":59}],68:[function(require,module,exports){
 var vDOM = require('./vDOM.js');
 
 function virtualQuery(array) {
@@ -9647,4 +9659,4 @@ Object.assign(virtualQuery.prototype, {
     }
 });
 module.exports = virtualQuery;
-},{"./vDOM.js":66}]},{},[62]);
+},{"./vDOM.js":67}]},{},[63]);

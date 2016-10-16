@@ -42,7 +42,10 @@
                     $(this).off("click", listener);
                 };
                 $('<div>click</div>').appendTo($('#append')).on("click", listener);
-                console.log($('body').html())
+                $.update();
+                console.log($('body').html());
+            }, {
+                autoUpdate: false
             });
         </script>
     </head>

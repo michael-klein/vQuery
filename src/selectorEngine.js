@@ -95,7 +95,7 @@ function checkPseudos(rules, node) {
 }
 
 function checkNesting(rules, node) {
-    if (typeof rules.nestingOperator === "undefined")
+    if (typeof rules.nestingOperator === "undefined" || rules.nestingOperator === ">")
         return true;
     var nextRules = getNextRules(rules);
     if (typeof nextRules !== "undefined" && typeof nextRules.nestingOperator !== "undefined") {
@@ -183,12 +183,12 @@ function traverseVDOM(rules, currentVDOM, selectedNodes, exact, pseudoMode) {
                     selectedNodes.push(currentVDOM);
                 if (!exact && currentVDOM.children.length > 0)
                     for (var i = 0; i < currentVDOM.children.length; i++) {
-                        traverseVDOM(rule, currentVDOM.children[i], selectedNodes, exact, pseudoMode, prevRule);
+                        traverseVDOM(rule, currentVDOM.children[i], selectedNodes, exact, pseudoMode);
                     }
             }
             else {
                 var nextRules = getNextRules(rule);
-                if (typeof nextRules.nestingOperator !== "undefined" && nextRules.nestingOperator !== ">") {
+                if (typeof nextRules.nestingOperator !== "undefined" && nextRules.nestingOperator && nextRules.nestingOperator !== ">") {
                     nextRules.prevRule = rule;
                     traverseVDOM(nextRules, currentVDOM, selectedNodes, exact, pseudoMode);
                 } else
@@ -208,7 +208,7 @@ module.exports.query = function(virtualNode, selector) {
     var parsedSelector = sparser.parse(selector),
         selectedNodes = [],
         nextRules = getNextRules(parsedSelector);
-    console.log(parsedSelector)
+    //console.log(parsedSelector)
     if (hasMoreRules(parsedSelector))
         traverseVDOM(nextRules, virtualNode.children[0], selectedNodes, nextRules.nestingOperator === ">", false, null);
     return selectedNodes;

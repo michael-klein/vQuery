@@ -16,7 +16,7 @@ var HTMLParser = require('htmlparser2'),
                     if (aName === "id")
                         cNode.id = value;
                     if (aName === "class")
-                        cNode.classNames.push(value.split(" "));
+                        cNode.classNames = value.split(" ");
                     cNode.attributes[aName] = value;
                 }
             },

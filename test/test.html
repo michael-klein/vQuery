@@ -15,6 +15,9 @@
             var $ = vQuery,
                 numMutations = 0;
             $(function() {
+                var $p = $('#test:has(p.helasdlo)');
+                console.log($p)
+                return;
                 var lastID=null; 
                 var t = new Date().getTime();
                 vQuery.afterRender(function() {
@@ -47,7 +50,7 @@
         </script>
     </head>
     <body>
-        <div id="test">
+        <div id="test" class="test">
             <div>
                 <h1>
                     <p class="hello"></p>

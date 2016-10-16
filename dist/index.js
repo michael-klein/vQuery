@@ -8962,10 +8962,10 @@ function getNextRules(rules) {
 };
 
 function checkClasses(rules, node) {
-    if (typeof rules.class === "undefined")
+    if (typeof rules.classNames === "undefined")
         return true;
-    for (var i=0; i<rules.class.length; i++) {
-        if (node.classNames.indexOf(rules.class[i]) === -1)
+    for (var i=0; i<rules.classNames.length; i++) {
+        if (node.classNames.indexOf(rules.classNames[i]) === -1)
             return false;
     }
     return true;
@@ -8987,6 +8987,55 @@ function checkID(rules, node) {
     return false;    
 }
 
+function checkPseudos(rules, node) {
+    if (typeof rules.pseudos === "undefined")
+        return true;
+    var pseudos = rules.pseudos;
+    for (var i=0; i<pseudos.length; i++) {
+        var pseudo = pseudos[i];
+        switch(pseudo.name) {
+            case "first-child":
+            case "last-child":
+            case "nth-child":
+                var children = node.parentNode.children;
+                if (typeof rules.tagName !== "undefined")
+                    children = children.filter(function(child) {
+                        return child.tagName === rules.tagName;
+                    });
+                switch(pseudo.name) {
+                    case "first-child":
+                        return children.indexOf(node) === 0;
+                    case "last-child":
+                        return children.indexOf(node) === children.length - 1;
+                    case "nth-child":
+                        return children.indexOf(node) === parseInt(pseudo.value);
+                }
+            case "has":
+                var selectedNodes = [],
+                nextRules = getNextRules(pseudo.value);
+                for (var i = 0; i < node.children.length; i++) {
+                    traverseVDOM(nextRules, node.children[i], selectedNodes, nextRules.nestingOperator === ">");
+                }
+                return selectedNodes.length > 0;
+        }
+    }
+    return false;    
+}
+var checks = [
+    checkTagName,
+    checkClasses,
+    checkID,
+    checkPseudos
+]
+checkHits = function(rules, currentVDOM) {
+    var res = true;
+    for (var i=0; i<checks.length; i++) {
+        if (!checks[i](rules, currentVDOM))
+            return false;
+    }
+    return true;
+}
+
 function traverseVDOM(rules, currentVDOM, selectedNodes, exact) {
     if (rules.id) {
         var idNode = vDOM.idNodes[rules.id];
@@ -8996,29 +9045,26 @@ function traverseVDOM(rules, currentVDOM, selectedNodes, exact) {
                 if (selectedNodes.indexOf(idNode) === -1)
                     selectedNodes.push(idNode);
             }
-            else
+            else {
+                var nextRules = getNextRules(rules);
                 for (var i = 0; i < idNode.children.length; i++) {
-                    var nextRules = getNextRules(rules);
                     traverseVDOM(nextRules, idNode.children[i], selectedNodes, nextRules.nestingOperator === ">");
                 }
+            }
             return;
         }
     }
-    var hits = {
-        tagName: checkTagName(rules, currentVDOM),
-        classNames: checkClasses(rules, currentVDOM),
-        id: checkID(rules, currentVDOM)
-    }
-    if (hits.tagName && hits.classNames && hits.id) {
+    if (checkHits(rules, currentVDOM)) {
         if (!hasMoreRules(rules)) {
             if (selectedNodes.indexOf(currentVDOM) === -1)
                 selectedNodes.push(currentVDOM);
         }
-        else
+        else {
+            var nextRules = getNextRules(rules);
             for (var i = 0; i < currentVDOM.children.length; i++) {
-                var nextRules = getNextRules(rules);
                 traverseVDOM(nextRules, currentVDOM.children[i], selectedNodes, nextRules.nestingOperator === ">");
             }
+        }
     } else
         if (!exact && currentVDOM.children.length > 0) 
             for (var i=0; i < currentVDOM.children.length; i++)
@@ -9028,6 +9074,7 @@ function traverseVDOM(rules, currentVDOM, selectedNodes, exact) {
 module.exports.query = function(virtualNode, selector) {
     var parsedSelector = sparser.parse(selector),
         selectedNodes = [];
+        console.log(parsedSelector)
     if (hasMoreRules(parsedSelector))
         traverseVDOM(getNextRules(parsedSelector), virtualNode.children[0], selectedNodes);
     return selectedNodes;
@@ -9090,7 +9137,7 @@ var HTMLParser = require('htmlparser2'),
                     if (aName === "id")
                         cNode.id = value;
                     if (aName === "class")
-                        cNode.classNames.push(value.split(" "));
+                        cNode.classNames = value.split(" ");
                     cNode.attributes[aName] = value;
                 }
             },

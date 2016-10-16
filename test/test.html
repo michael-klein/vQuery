@@ -15,9 +15,6 @@
             var $ = vQuery,
                 numMutations = 0;
             $(function() {
-                var $p = $('#test:not(#asdtest)');
-                console.log($p)
-                return;
                 var lastID=null; 
                 var t = new Date().getTime();
                 vQuery.afterRender(function() {
@@ -29,10 +26,10 @@
                 var config = { attributes: true, childList: true, characterData: true, subtree: true};
                 observer.observe(document.body, config);
                 for (var i=0; i<10000;i++) {
-                    var $p = $('#test >div h1 p');
+                    var $p = $('#test >div h1:has(p) p:first-child');
                     
                     if (lastID)
-                        $('#test >div h1 p div#' + lastID).remove();
+                        $('#test >div h1:has(p) p div#' + lastID).remove();
                     $p.prepend("<div id=\"n" + i + "\">hi</div>");
                     lastID = "n" + i;
                     

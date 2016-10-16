@@ -57,7 +57,7 @@ function checkPseudos(rules, node) {
                 var children = node.parentNode.children;
                 if (typeof rules.tagName !== "undefined")
                     children = children.filter(function(child) {
-                        return child.tagName === rules.tagName;
+                        return child.name === rules.tagName;
                     });
                 switch(pseudo.name) {
                     case "first-child":
@@ -85,8 +85,8 @@ function checkPseudos(rules, node) {
 }
 var checks = [
     checkTagName,
-    checkClasses,
     checkID,
+    checkClasses,
     checkPseudos
 ]
 checkHits = function(rules, currentVDOM) {
@@ -136,7 +136,6 @@ function traverseVDOM(rules, currentVDOM, selectedNodes, exact, pseudoMode) {
 module.exports.query = function(virtualNode, selector) {
     var parsedSelector = sparser.parse(selector),
         selectedNodes = [];
-        console.log(parsedSelector)
     if (hasMoreRules(parsedSelector))
         traverseVDOM(getNextRules(parsedSelector), virtualNode.children[0], selectedNodes, false);
     return selectedNodes;

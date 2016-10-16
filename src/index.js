@@ -14,6 +14,7 @@ function prepareDOMs() {
     if (!vDOM.oldDOM) {
         vDOM.oldDOM = vDOM.createVDOM(document.querySelector('html').outerHTML, true);
         vDOM.newDOM = vDOM.createVDOM(document.querySelector('html').outerHTML, true);
+        console.log(vDOM.newDOM)
         vDOM.newDOM.changed = false;
     }
 }

@@ -10,7 +10,7 @@ module.exports = {
             childNodes: [],
             id: null,
             listeners: {},
-            hasListeners: false,
+            hasListeners: false, 
             removeListeners: []
         });
     },

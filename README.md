@@ -10,6 +10,8 @@ This can significantly reduce the number of real DOM manipulations needed to ren
 
 Furthermore, vQuery also works in the node.js environment. You can load HTML documents, manipulate them and retrieve the new output - or a patch (that you might send to the browser).
 
+**WARNING: This library is very much still a work in progress and in no way ready for production use!**
+
 
 # Licence
 **MIT License**

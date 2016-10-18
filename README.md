@@ -21,7 +21,7 @@ $(function () {
         .append("<div>Hello World!</div>"); //append a child div
     $.update(); //computes a DOM patch and applies it to the real DOM
 }, {
-        autoUpdate: false //disabled auto patching of the DOM
+    autoUpdate: false //disabled auto patching of the DOM
 });
 ```
 

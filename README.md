@@ -4,7 +4,7 @@
 
 vQuery is an isomorphic library that aims to enable more developers to speed up their code base with virtual DOM diffing and DOM patching.
 
-It implements a subset of the jQuery API, but executes all manipulations on a virtual DOM and only updates the real DOM with a patch generated from the state of the virtual DOM whenever vQuery.update is called (either manually or at set intervals).
+It implements a subset of the [jQuery](http://www.jquery.com/) API, but executes all manipulations on a virtual DOM and only updates the real DOM with a patch generated from the state of the virtual DOM whenever vQuery.update is called (either manually or at set intervals).
 
 This can significantly reduce the number of real DOM manipulations needed to render a view to the browser, thus thus also eliminating unneeded repaints and reflows.
 
@@ -37,6 +37,27 @@ $(function () {...},
     }
 );
 ```
+
+## virtualQuery
+**virtualQuery** objects are just like jQuery objects. They offer an API to manipulate a selection of virtual DOM nodes. 
+
+All of the supported methods emulate the [jQuery API](http://api.jquery.com/).
+
+###supported methods:
+* append
+* appendTo
+* prepend
+* prependTo
+* remove
+* addClass
+* removeClass
+* hasClass
+* html
+* attr
+* css
+* clone
+* on
+* off
 
 ##API
 

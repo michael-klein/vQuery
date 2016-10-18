@@ -15,13 +15,15 @@ Furthermore, vQuery also works in the node.js environment. You can load HTML doc
 
 ## Examle:
 
-    $(function() {
-      $('body') //select the body element
-        .append("<div>Hello World!</div>"); //append a child div
-      $.update(); //computes a DOM patch and applies it to the real DOM
-    }, {
-      autoUpdate: false //disabled auto patching of the DOM
-    });
+```
+$(function() {
+                 $('body') //select the body element
+                    .append("<div>Hello World!</div>"); //append a child div
+                 $.update(); //computes a DOM patch and applies it to the real DOM
+             }, {
+                autoUpdate: false //disabled auto patching of the DOM
+             });
+```
 
 # Licence
 **MIT License**

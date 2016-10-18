@@ -1,2 +1,2 @@
 # vQuery
-## virtualDOM goodness for everyone
+> virtualDOM goodness for everyone

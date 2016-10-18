@@ -38,6 +38,17 @@ $(function () {...},
 );
 ```
 
+##API
+
+###Main vQuery method:
+```javascript
+$(function|string|object)...
+```
+Arguments:
+* **function:** pass a function that will be executed once the DOM is ready
+* **string:** This can either be a HTML string or a CSS selector. Returns either an instance of **virtualQuery** or an empty array;
+* **object**: An instance of **virtualNode**. Returns an instance of **virtualQuery** 
+
 ## virtualQuery
 **virtualQuery** objects are just like jQuery objects. They offer an API to manipulate a selection of virtual DOM nodes. 
 
@@ -58,17 +69,6 @@ All of the supported methods emulate the [jQuery API](http://api.jquery.com/).
 * clone
 * on
 * off
-
-##API
-
-###Main vQuery method:
-```javascript
-$(function|string|object)...
-```
-Arguments:
-* **function:** pass a function that will be executed once the DOM is ready
-* **string:** This can either be a HTML string or a CSS selector. Returns either an instance of **virtualQuery** or an empty array;
-* **object**: An instance of **virtualNode**. Returns an instance of **virtualQuery** 
  
 # Licence
 **MIT License**

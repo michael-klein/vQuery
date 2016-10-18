@@ -8,4 +8,4 @@ function execute(command) {
         }
     });
 };
-execute("browserify src/index.js -o dist/index.js");
+execute("browserify . -d --s vQuery > dist/index.js");

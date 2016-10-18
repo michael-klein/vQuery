@@ -1,22 +1,3 @@
-var decodeEntities = (function() {
-    // this prevents any overhead from creating the object each time
-    var element = document.createElement('div');
-
-    function decodeHTMLEntities (str) {
-        if(str && typeof str === 'string') {
-            // strip script/html tags
-            str = str.replace(/<script[^>]*>([\S\s]*?)<\/script>/gmi, '');
-            str = str.replace(/<\/?\w(?:[^"'>]|"[^"]*"|'[^']*')*>/gmi, '');
-            element.innerHTML = str;
-            str = element.textContent;
-            element.textContent = '';
-        }
-
-        return str;
-    }
-
-    return decodeHTMLEntities;
-})();
 function createNode(data, vDOM) {
     var node = document.createElement(data.name);
     for (var i in data.attributes) {
@@ -29,7 +10,7 @@ function createNode(data, vDOM) {
                 node.appendChild(child);
         }
     if (data instanceof vDOM.virtualTextNode)
-        return document.createTextNode(decodeEntities(data.value));
+        return document.createTextNode(data.value);
     return node;
 }
 var rquickExpr = /^(?:\s*(<[\w\W]+>)[^>]*|#([\w-]+))$/;
@@ -41,8 +22,15 @@ function isHTML(str) {
         return match !== null && match[1];
     }
 }
+function isNode() {
+    var res = false; 
+    try {
+        res = Object.prototype.toString.call(global.process) === '[object process]' 
+    } catch(e) {}
+    return res;
+}
 module.exports = {
-    decodeEntities: decodeEntities,
     createNode: createNode,
-    isHTML: isHTML
+    isHTML: isHTML,
+    isNode: isNode
 }

@@ -25,12 +25,15 @@ module.exports = {
     afterRenderCallbacks: [],
     update: function() {
         var d = diff(vDOM.oldDOM, vDOM.newDOM, "html");
-        if (d.length > 0)
-            this.render(d, document.querySelector("html"));
+        if (!utils.isNode()) {
+            if (d.length > 0)
+                this.render(d, document.querySelector("html"));
+        }
         for (var i = 0; i < this.afterRenderCallbacks.length; i++)
             this.afterRenderCallbacks[i]();
         vDOM.oldDOM = cloneObject(vDOM.newDOM);
         vDOM.newDOM.changed = false;
+        return diff;
     },
     render: function(ops,node) {
         var t = new Date().getTime();

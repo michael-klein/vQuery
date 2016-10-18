@@ -1,27 +1,28 @@
 require("./arrayFunctions.js");
 var isReady = false,
-    domready = require('domready'),
     vDOM = require('./vDOM/vDOM.js'),
     utils = require('./utils.js'),
     render = require('./render.js'),
     virtualQuery = require('./virtualQuery.js'),
     selectorEngine = require('./selectorEngine/selectorEngine.js'),
+    domready = utils.isNode() ? null : require('domready'),
     options = require('./options.js');
 
 
 
 function prepareDOMs() {
     if (!vDOM.oldDOM) {
-        vDOM.oldDOM = vDOM.createVDOM(document.querySelector('html').outerHTML, true);
-        vDOM.newDOM = vDOM.createVDOM(document.querySelector('html').outerHTML, true);
-        console.log(vDOM.newDOM)
-        vDOM.newDOM.changed = false;
+        if (utils.isNode()) {
+            vDOM.load("");
+        } else {
+            vDOM.load(document.querySelector('html').outerHTML);
+        }
     }
 }
-
-domready(function () {
-        isReady = true;
-});
+if (domready)
+    domready(function () {
+            isReady = true;
+    });
 
 function renderTimer() {
     if (vDOM.newDOM.changed) {
@@ -35,16 +36,16 @@ function renderTimer() {
 
 function ready(cb) {
     prepareDOMs();
-    if (options.autoUpdate)
+    if (options.autoUpdate && !utils.isNode())
         window.setTimeout(renderTimer, options.updateInterval);
     cb();
 }
-vQuery = function(arg, optionsIn) {
+var vQuery = function(arg, optionsIn) {
     switch (typeof arg) {
         case "function":
             if (typeof optionsIn === "object")
                 options = Object.assign(options, optionsIn);
-            if (isReady) {
+            if (isReady || utils.isNode()) {
                 ready(arg);
             }
             else
@@ -82,3 +83,8 @@ vQuery.update = function () {
 vQuery.getDOM = function() {
     return [vDOM.oldDOM, vDOM.newDOM];
 }
+
+vQuery.load = function(html) {
+    return vDOM.load(html);
+}
+module.exports = vQuery;

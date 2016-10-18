@@ -127,5 +127,10 @@ module.exports = {
             }
         }
         return root;
+    },
+    load: function(html) {
+        this.oldDOM = this.createVDOM(html, true);
+        this.newDOM = this.createVDOM(html, true);
+        this.newDOM.changed = false;
     }
 };

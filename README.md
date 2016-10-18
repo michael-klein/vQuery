@@ -13,16 +13,29 @@ Furthermore, vQuery also works in the node.js environment. You can load HTML doc
 **WARNING: This library is very much still a work in progress and in no way ready for production use!**
 
 
-## Examle:
+## Example:
 
 ```javascript
-$(function () {
+$(function () { //wait for page to finish loading
     $('body') //select the body element
         .append("<div>Hello World!</div>"); //append a child div
     $.update(); //computes a DOM patch and applies it to the real DOM
 }, {
-    autoUpdate: false //disabled auto patching of the DOM
+    autoUpdate: false //disable auto patching of the DOM
 });
+```
+
+## Options
+You can supply vQuery with an options object as the second argument:
+
+
+```javascript
+$(function () {...}, 
+    {
+        autoUpdate: true, //Should the DOM automatically be patched in intervals (using window.requestAnimationFrame)? Default: true
+        updateInterval: 1 //The time between each auto-patch in milliseconds. Default: 1
+    }
+);
 ```
 
 # Licence

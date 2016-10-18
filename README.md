@@ -26,6 +26,7 @@ $(function () { //wait for page to finish loading
 ```
 
 ## Options
+
 You can supply vQuery with an options object as the second argument:
 
 
@@ -38,9 +39,9 @@ $(function () {...},
 );
 ```
 
-##API
+## API
 
-###Main vQuery method:
+### Main vQuery method:
 ```javascript
 $(function|string|object)...
 ```
@@ -54,7 +55,7 @@ Arguments:
 
 All of the supported methods emulate the [jQuery API](http://api.jquery.com/).
 
-###supported methods:
+### supported methods:
 * append
 * appendTo
 * prepend
@@ -70,8 +71,10 @@ All of the supported methods emulate the [jQuery API](http://api.jquery.com/).
 * on
 * off
 
-##Use with node.js
+## Use with node.js
+
 Simply require the library and use it in your code the same way you would use it in the browser. The main difference is that since node.js has no DOM, there is no support for rendering patches. You can manipulate the virtual DOM and retrieve the changed document using **virtualQuery.html()**
+
 **vQuery.update()** Will return the patch computed from diffing the old vs. the new virtual DOM after you made some changes.
  
 # Licence

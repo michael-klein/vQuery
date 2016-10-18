@@ -38,6 +38,17 @@ $(function () {...},
 );
 ```
 
+##API
+
+###Main vQuery method:
+```javascript
+$(function|string|object)...
+```
+Arguments:
+* **function:** pass a function that will be executed once the DOM is ready
+* **string:** This can either be a HTML string or a CSS selector. Returns either an instance of **virtualQuery** or an empty array;
+* **object**: An instance of **virtualNode**. Returns an instance of **virtualQuery** 
+ 
 # Licence
 **MIT License**
 

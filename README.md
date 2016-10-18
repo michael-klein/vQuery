@@ -71,7 +71,7 @@ All of the supported methods emulate the [jQuery API](http://api.jquery.com/).
 * on
 * off
 
-## Supported CSS Selectors:
+### Supported CSS Selectors:
 * tagname
 * #id
 * .class

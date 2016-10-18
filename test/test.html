@@ -12,6 +12,27 @@
         <script src="../dist/index.js"></script>
         <script   src="http://code.jquery.com/jquery-3.1.1.min.js"   integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="   crossorigin="anonymous"></script>
         <script>
+            /**
+             * this is just a very simple test case that applies a bunch of mutations
+             * replace vQuery with jQuery
+             * check your console to see output
+             */
+            var $ = vQuery;
+            $(function() {
+                 $('body') //select the body element
+                    .append("<div>Hello World!</div>"); //append a child div
+                 $.update(); //computes a DOM patch and applies it to the real DOM
+             }, {
+                autoUpdate: false //disabled auto patching of the DOM
+             });
+             $(function() {
+                 $('body') //select the body element
+                    .append("<div>Hello World!</div>"); //append a child div
+                 $.update(); //computes a DOM patch and applies it to the real DOM
+             }, {
+                autoUpdate: false //disabled auto patching of the DOM
+             });
+             return;
             var $ = vQuery,
                 numMutations = 0;
             $(function() {

@@ -32,7 +32,7 @@ You can supply vQuery with an options object as the second argument:
 ```javascript
 $(function () {...}, 
     {
-        autoUpdate: true, //Should the DOM automatically be patched in intervals (using window.requestAnimationFrame)? Default: true
+        autoUpdate: true, //Should the DOM automatically be patched in intervals (using window.requestAnimationFrame)? You can always call vQuery.update() to trigger a patch. Default: true
         updateInterval: 1 //The time between each auto-patch in milliseconds. Default: 1
     }
 );

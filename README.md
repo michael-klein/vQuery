@@ -6,7 +6,7 @@ vQuery is an isomorphic library that aims to enable more developers to speed up 
 
 It implements a subset of the jQuery API, but executes all manipulations on a virtual DOM and only updates the real DOM with a patch generated from the state of the virtual DOM whenever vQuery.update is called (either manually or at set intervals).
 
-This can significantly reduce the number of real DOM manipulations needed to render a view to the browser, thus thus also eliminating unneeded repaints and reflows (see /examples).
+This can significantly reduce the number of real DOM manipulations needed to render a view to the browser, thus thus also eliminating unneeded repaints and reflows.
 
 Furthermore, vQuery also works in the node.js environment. You can load HTML documents, manipulate them and retrieve the new output - or a patch (that you might send to the browser).
 

@@ -71,12 +71,42 @@ All of the supported methods emulate the [jQuery API](http://api.jquery.com/).
 * on
 * off
 
+## Supported CSS Selectors:
+* tagname
+* #id
+* .class
+* [attribute]
+    * [attribute=value]
+    * [attribute~=value]
+    * [attribute*=value]
+    * [attribute|=value]    
+    * [attribute^=value]
+    * [attribute$=value]
+* nesting operators: >, +, ~
+* pseudo classes:
+    * :has
+    * :not
+    * :first-child
+    * :last-child
+    * :only-child
+    * :nth-child
+    * :nth-last-child
+
+
 ## Usage with node.js
 
 Simply require the library and use it in your code the same way you would use it in the browser. The main difference is that since node.js has no DOM, there is no support for rendering patches. You can manipulate the virtual DOM and retrieve the changed document using **virtualQuery.html()**.
 
 **vQuery.update()** Will return the patch computed from diffing the old vs. the new virtual DOM after you made some changes.
- 
+
+# TODO
+
+* Implement more API methods
+* Improve selectorEngine
+* Create proper unit tests
+* Make the library able to handle external DOM changes (right now, if anything other than vQuery manipulates the real DOM, it might break DOM patching)
+* Improve diff + patch
+
 # Licence
 **MIT License**
 

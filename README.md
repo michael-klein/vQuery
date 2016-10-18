@@ -26,7 +26,16 @@ $(function () { //wait for page to finish loading
 ```
 
 
-## Options
+## Motivation
+
+I've been working with different virtual DOM implementations for my master's thesis and have been using various related javaScript frameworks in the past. I realized that for the most part, if people want to take advantage of virtual DOM diffing and patching, they would have to commit to using one of the various frameworks which supports those features - including all of it's opinionated concepts.
+This is why I felt there's room for a library which enables vDOM powered DOM manipulation without the baggade of an entire framework. One that provides a familiar, proven API.
+
+
+## API
+
+
+### Options
 
 You can supply vQuery with an options object as the second argument:
 
@@ -39,10 +48,6 @@ $(function () {...},
     }
 );
 ```
-
-
-## API
-
 
 ### Main vQuery method:
 

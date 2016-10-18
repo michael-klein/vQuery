@@ -11,7 +11,7 @@ Furthermore, vQuery also works in the node.js environment. You can load HTML doc
 
 
 # Licence
-> MIT License
+* MIT License *
 
 Copyright (c) 2016 Michael Klein
 

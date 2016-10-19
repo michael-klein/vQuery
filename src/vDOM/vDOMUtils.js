@@ -16,6 +16,7 @@ function clone(nodes) {
     return newNodes;
 }
 function setChanged(node) {
+    if (typeof node === "undefined") return;
     while (node.parentNode) {
         node = node.parentNode;
     }

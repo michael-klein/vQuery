@@ -33,11 +33,11 @@ module.exports = {
                 removeHelper(node.children[i]);
             self.removeNodes(node.children);
         }
-        function addHelper(node) {
-            for (var i=0; i<node.children.length; i++) {
-                addHelper(node.children[i]);
-                if (node.children[i].id)
-                    self.idNodes = node.children[i];
+        function addHelper(nodes) {
+            for (var i=0; i<nodes.length; i++) {
+                addHelper(nodes[i]);
+                if (nodes[i].id)
+                    self.idNodes = nodes[i];
             }
         }
         for (var i=0; i<nodes.length; i++) {

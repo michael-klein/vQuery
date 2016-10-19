@@ -44,7 +44,7 @@ var vQuery = function(arg, optionsIn) {
     switch (typeof arg) {
         case "function":
             if (typeof optionsIn === "object")
-                options = Object.assign(options.options, optionsIn);
+                options.options = Object.assign(options.options, optionsIn);
             if (isReady || utils.isNode()) {
                 ready(arg);
             }

@@ -17,7 +17,6 @@ function handleListeners(domNode, listeners) {
     }
 }
 
-
 module.exports = {
     isRendering: function() {
         return rendering;

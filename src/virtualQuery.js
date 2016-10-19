@@ -129,12 +129,12 @@ Object.assign(virtualQuery.prototype, {
     },
     on: function(event, callback) {
         vDOM.on(this, event, callback);
-        if (!options.autoUpdate)
+        if (!options.options.autoUpdate)
             render.update();
     },
     off: function(event, callback) {
         vDOM.off(this, event, callback);
-        if (!options.autoUpdate)
+        if (!options.options.autoUpdate)
             render.update();
     }
 });

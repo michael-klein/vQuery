@@ -28,12 +28,12 @@ module.exports = {
     //generated virtual DOM from passed html and replaces the children of the passed nodes with it
     setHTML: function(nodes, html) {
         var self = this;
-        function removeHelper(nodes) {
+        function removeHelper(node) {
             for (var i=0; i<node.children.length; i++)
                 removeHelper(node.children[i]);
             self.removeNodes(node.children);
         }
-        function addHelper(nodes) {
+        function addHelper(node) {
             for (var i=0; i<node.children.length; i++) {
                 addHelper(node.children[i]);
                 if (node.children[i].id)

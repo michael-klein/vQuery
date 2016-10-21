@@ -42,6 +42,7 @@ var nodeTypes = require('./nodeTypes.js');
 module.exports = {
     idNodes: [],
     createVDOM: function (data, init) {
+        data = "<div>" + data + "</div>";
         data = data.replace(/\r?\n|\r/g, "");
         var root = new nodeTypes.virtualNode("root", null);
         var currentParent = root;
@@ -126,7 +127,7 @@ module.exports = {
                 }
             }
         }
-        return root;
+        return root.children[0];
     },
     load: function(html) {
         this.oldDOM = this.createVDOM(html, true);

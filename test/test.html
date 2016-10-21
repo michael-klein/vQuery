@@ -17,27 +17,14 @@
              * replace vQuery with jQuery
              * check your console to see output
              */
-            var $ = vQuery;
-            $(function() {
-                 $('body') //select the body element
-                    .append("<div>Hello World!</div>"); //append a child div
-                 $.update(); //computes a DOM patch and applies it to the real DOM
-             }, {
-                autoUpdate: false //disabled auto patching of the DOM
-             });
-             $(function() {
-                 $('body') //select the body element
-                    .append("<div>Hello World!</div>"); //append a child div
-                 $.update(); //computes a DOM patch and applies it to the real DOM
-             }, {
-                autoUpdate: false //disabled auto patching of the DOM
-             });
-             return;
             var $ = vQuery,
                 numMutations = 0;
             $(function() {
                 //console.log($('div[align*=leftasd]'));console.log($('div[align*=left]')); return;
-                
+                $('.text').html("lalala<br />adasdasd");
+                console.log($('.text').html())
+                $.update()
+                return;
                 var lastID=null; 
                 var t = new Date().getTime();
                 vQuery.afterRender(function() {
@@ -75,6 +62,10 @@
         </script>
     </head>
     <body>
+        <div class="text">
+            asdasdasd<br>
+            asdasdsad
+        </div>
         <div id="test" class="test">
             <div>
                 <h1>

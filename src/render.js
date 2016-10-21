@@ -64,6 +64,10 @@ module.exports = {
                     if (op.hl)
                         handleListeners(newNode, op.l);
                     break;
+                case "textChange":
+                    var parent = root.querySelector(op.p);
+                    parent.childNodes[op.i].nodeValue = op.v;
+                    break;
                 case "attrChanged":
                     root.querySelector(op.n).setAttribute(op.a, op.v);
                     break;

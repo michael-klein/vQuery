@@ -124,14 +124,14 @@ module.exports = function (DOM1, DOM2, entry) {
                                 t: "textChange",
                                 v: newChild.value,
                                 p: getPath(oldNode, path),
-                                i: childNodesIndex
+                                i: oldNode.childNodes.indexOf(oldChild)
                             });
                     } else
                         if (typeof newChild === "undefined") {
                             if (oldChild instanceof vDOM.virtualTextNode) {
                                 ops.push({
                                     t: "textRemove",
-                                    i: childNodesIndex,
+                                    i: oldNode.childNodes.indexOf(oldChild),
                                     p: getPath(oldNode, path)
                                 });
                             } else {

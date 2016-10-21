@@ -43,9 +43,10 @@ module.exports = {
         for (var i=0; i<nodes.length; i++) {
             var node = nodes[i];
             removeHelper(node);
-            node.children = this.createVDOM(html).children;
+            var newVDOM = this.createVDOM(html);
+            node.children = newVDOM.children;
             addHelper(node.children);
-            node.childNodes = this.createVDOM(html).childNodes;    
+            node.childNodes = newVDOM.childNodes;    
         }
         vDOMUtils.setChanged(nodes[0]);
     },

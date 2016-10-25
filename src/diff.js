@@ -94,6 +94,7 @@ module.exports = function (DOM1, DOM2, entry) {
                 var oldChild = oldChildren[i],
                     newChild = newChildren[i],
                     newIndex = i - discrepancy;
+                if (typeof newChild === "undefined" && typeof oldChild === "undefined") break;
                 //check if new Node is not in old doc -> insert
                 if (typeof oldChild === "undefined") {
                     if (newChild instanceof vDOM.virtualTextNode) {

@@ -33,7 +33,7 @@ module.exports.query = function(virtualNode, selector) {
     var parsedSelector = sparser.parse(selector),
         selectedNodes = [],
         nextRules = selectorUtils.getNextRules(parsedSelector);
-    //console.log(parsedSelector)
+    console.log(parsedSelector,nextRules)
     if (selectorUtils.hasMoreRules(parsedSelector))
         selectorUtils.traverseVDOM(nextRules, virtualNode.children[0], selectedNodes, nextRules.nestingOperator === ">", false, null);
     return selectedNodes;

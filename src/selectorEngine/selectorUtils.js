@@ -14,6 +14,8 @@ function getNextRules(rules) {
 }
 
 function traverseVDOM(rules, currentVDOM, selectedNodes, exact, pseudoMode) {
+    if (Object.keys(rules).length === 1 && rules.type)
+        return null;
     if (typeof rules.length === "undefined")
         var iterator = [rules];
     else

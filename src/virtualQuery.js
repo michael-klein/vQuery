@@ -1,5 +1,6 @@
 var vDOM = require('./vDOM/vDOM.js'),
     render = require('./render.js'),
+    selectorEngine = require('./selectorEngine/selectorEngine.js'),
     options = require('./options.js');
 
 function virtualQuery(array) {
@@ -136,6 +137,11 @@ Object.assign(virtualQuery.prototype, {
         vDOM.off(this, event, callback);
         if (!options.options.autoUpdate)
             render.update();
+    },
+    find: function(query) {
+        this.forEach((node) => {
+            console.log(selectorEngine.query(node,query))
+        });
     }
 });
 module.exports = virtualQuery;
